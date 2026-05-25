@@ -6,16 +6,26 @@ class Categoria(models.Model):
     nome = models.CharField(max_length=100, unique=True)
     descricao = models.TextField(blank=True)
 
+    class Meta:
+        verbose_name = "Categoria"
+        verbose_name_plural = "Categorias"
+
     def __str__(self):
         return self.nome
+
 
 class TipoDesregulador(models.Model):
     # RF11 - Gerenciar Eixos Hormonais
     nome = models.CharField(max_length=100, help_text="Ex: Estrogênico, Androgênico, Tireoidiano")
     descricao = models.TextField()
 
+    class Meta:
+        verbose_name = "Eixo Hormonal / Tipo Desregulador"
+        verbose_name_plural = "Eixos Hormonais (Tipos)"
+
     def __str__(self):
         return self.nome
+
 
 class Substancia(models.Model):
     # RF10 - Gerenciar Desreguladores
@@ -26,8 +36,13 @@ class Substancia(models.Model):
     descricao = models.TextField(blank=True)
     tipo_desregulador = models.ForeignKey(TipoDesregulador, on_delete=models.PROTECT, related_name='substancias')
 
+    class Meta:
+        verbose_name = "Substância Química"
+        verbose_name_plural = "Substâncias Químicas"
+
     def __str__(self):
         return self.nome
+
 
 class Produto(models.Model):
     # RF07 - Gerenciar Produtos
@@ -40,8 +55,13 @@ class Produto(models.Model):
     fabricante = models.CharField(max_length=150)
     nota_flora = models.FloatField(default=5.0, help_text="Calculada dinamicamente de 1 a 5 (RN03)")
 
+    class Meta:
+        verbose_name = "Produto"
+        verbose_name_plural = "Produtos"
+
     def __str__(self):
         return f"{self.nome} ({self.marca})"
+
 
 class Ingrediente(models.Model):
     # RF08 - Gerenciar Ingredientes 
@@ -49,8 +69,13 @@ class Ingrediente(models.Model):
     funcao_quimica = models.CharField(max_length=100, help_text="Ex: Conservante, Emulsificante")
     substancia = models.ForeignKey(Substancia, on_delete=models.SET_NULL, null=True, blank=True, related_name='ingredientes')
 
+    class Meta:
+        verbose_name = "Ingrediente Rotulado"
+        verbose_name_plural = "Ingredientes Cadastrados"
+
     def __str__(self):
         return self.nome
+
 
 class ProdutoIngrediente(models.Model):
     # RF09 - Gerenciar Composição 
@@ -61,6 +86,9 @@ class ProdutoIngrediente(models.Model):
 
     class Meta:
         unique_together = ('produto', 'ingrediente')
+        verbose_name = "Ingrediente do Produto"
+        verbose_name_plural = "Fórmulas / Composição dos Produtos"
+
 
 class SugestaoTroca(models.Model):
     # RF18 - Sugerir Substituições (RN07) 
@@ -71,8 +99,13 @@ class SugestaoTroca(models.Model):
     confianca = models.FloatField(default=1.0, help_text="Grau de certeza estatística do algoritmo/médico")
     especialista = models.ForeignKey(Especialista, on_delete=models.SET_NULL, null=True, blank=True)
 
+    class Meta:
+        verbose_name = "Sugestão de Troca"
+        verbose_name_plural = "Sugestões de Trocas Saudáveis"
+
     def __str__(self):
         return f"Trocar {self.produto_risco.nome} por {self.produto_seguro.nome}"
+
 
 class Referencia(models.Model):
     # RF19 - Gerenciar Referências 
@@ -83,6 +116,10 @@ class Referencia(models.Model):
     instituicao_fonte = models.CharField(max_length=255)
     substancia = models.ForeignKey(Substancia, on_delete=models.CASCADE, related_name='referencias')
     arquivo_artigo = models.FileField(upload_to='artigos_cientificos/', null=True, blank=True) # Atende UI-vi
+
+    class Meta:
+        verbose_name = "Referência Científica"
+        verbose_name_plural = "Referências Científicas (Artigos)"
 
     def __str__(self):
         return self.titulo_artigo

@@ -45,7 +45,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'flora.urls'
+ROOT_URLCONF = 'config.urls'
 
 #TEMPLATES
 TEMPLATES = [
@@ -64,7 +64,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'flora.wsgi.application'
+WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = { 
     'default': { 

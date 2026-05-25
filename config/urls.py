@@ -6,13 +6,13 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # Módulos do Sistema FLORA
-    path('', include('saude.urls')),          # Centraliza o Dashboard e Diários na raiz
-    path('usuarios/', include('usuarios.urls')), # Fluxos de usuários, perfis e login
-    path('produtos/', include('produtos.urls')), # Catálogo de produtos, substâncias e trocas
+    # Módulos do Sistema FLORA apontando corretamente para os seus apps:
+    path('', include('saude.urls')),          
+    path('usuarios/', include('usuarios.urls')), 
+    path('produtos/', include('produtos.urls')), 
 ]
 
-# Configuração para servir arquivos de mídia (Fotos de perfil e de produtos) em Desenvolvimento
+# Configuração para servir arquivos de mídia e estáticos
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_block=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -15,14 +15,25 @@ class ArmarioItem(models.Model):
 
     class Meta:
         unique_together = ('usuario', 'produto')
+        verbose_name = "Item do Armário Virtual"
+        verbose_name_plural = "Itens do Armário Virtual"
+
+    def __str__(self):
+        return f"{self.produto.nome} no armário de {self.usuario.nome_completo}"
+
 
 class Sintoma(models.Model):
     # RF13 - Gerenciar Sintomas 
     nome = models.CharField(max_length=100, unique=True)
     descricao = models.TextField()
 
+    class Meta:
+        verbose_name = "Sintoma"
+        verbose_name_plural = "Sintomas"
+
     def __str__(self):
         return self.nome
+    
 
 class RegistroSintoma(models.Model):
     # RF14 - Registrar Diário de Ciclo 
@@ -33,8 +44,13 @@ class RegistroSintoma(models.Model):
     fase_ciclo = models.CharField(max_length=50)
     observacoes = models.TextField(blank=True)
 
+    class Meta:
+        verbose_name = "Registro de Sintoma"
+        verbose_name_plural = "Registros de Sintomas"
+
     def __str__(self):
         return f"{self.usuario.nome_completo} - {self.sintoma.nome} ({self.data_ocorrencia})"
+    
 
 class CicloMenstrual(models.Model):
     # RF15 - Registrar Ciclo Menstrual 
@@ -44,8 +60,13 @@ class CicloMenstrual(models.Model):
     duracao = models.IntegerField(help_text="Duração em dias calculada automaticamente")
     observacoes = models.TextField(blank=True)
 
+    class Meta:
+        verbose_name = "Ciclo Menstrual"
+        verbose_name_plural = "Ciclos Menstruais"
+
     def __str__(self):
         return f"Ciclo iniciado em {self.data_inicio} - {self.usuario.nome_completo}"
+    
 
 class Exposicao(models.Model):
     # RF16 - Registrar Exposição
@@ -56,8 +77,13 @@ class Exposicao(models.Model):
     carga_total = models.FloatField(default=0.0)
     data_calculo = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = "Exposição"
+        verbose_name_plural = "Histórico de Exposições"
+
     def __str__(self):
         return f"Carga {self.carga_total} em {self.data_calculo.strftime('%d/%m/%Y')}"
+
 
 class ExposicaoDetalhe(models.Model):
     # RF17 - Registrar Detalhamento da Exposição 
@@ -65,6 +91,14 @@ class ExposicaoDetalhe(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
     substancia = models.ForeignKey(Substancia, on_delete=models.CASCADE)
     valor_contribuicao = models.FloatField(help_text="Contribuição fracionada desta substância no cálculo total")
+
+    class Meta:
+        verbose_name = "Detalhe da Exposição"
+        verbose_name_plural = "Detalhes das Exposições"
+
+    def __str__(self):
+        return f"Detalhe {self.substancia.nome} - {self.exposicao.usuario.nome_completo}"
+
 
 class AlertaRisco(models.Model):
     # RF24 - Emitir alertas de risco (Baseado nas metas da RN04 e RN05)
@@ -79,8 +113,13 @@ class AlertaRisco(models.Model):
     nivel_gravidade = models.CharField(max_length=10, choices=GRAVIDADE_CHOICES)
     data_emissao = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = "Alerta de Risco"
+        verbose_name_plural = "Alertas de Risco"
+
     def __str__(self):
         return f"Alerta {self.nivel_gravidade} - {self.usuario.nome_completo}"
+
 
 class Notificacao(models.Model):
     # RF25 - Gerenciar Notificações
@@ -89,6 +128,10 @@ class Notificacao(models.Model):
     tipo_notificacao = models.CharField(max_length=100)
     lida = models.BooleanField(default=False)
     data_envio = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Notificação"
+        verbose_name_plural = "Notificações"
 
     def __str__(self):
         return f"Notificação para {self.usuario.nome_completo} - Lida: {self.lida}"
