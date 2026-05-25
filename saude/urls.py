@@ -4,8 +4,8 @@ from . import views
 app_name = 'saude'
 
 urlpatterns = [
-    # # Dashboard Principal (RF23: Gráfico Radar do mapa hormonal pessoal)
-    # path('', views.DashboardView.as_view(), name='dashboard'),
+    # Dashboard Principal (RF23: Gráfico Radar do mapa hormonal pessoal)
+    path('', views.DashboardView.as_view(), name='dashboard'),
     
     # # Armário Virtual (RF12, UI-iv: Ajustar frequências de uso)
     # path('armario/', views.ArmarioVirtualView.as_view(), name='armario_virtual'),
