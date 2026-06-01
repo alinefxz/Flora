@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | FLORA{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-copy">
+        <p class="eyebrow">Saúde feminina e exposição química</p>
+        <h1>Um painel simples para acompanhar riscos, sintomas e produtos.</h1>
+        <p>
+            Organize usuárias, produtos, substâncias, ciclos, sintomas, alertas e sugestões
+            em um só lugar, com a delicadeza visual da identidade FLORA.
+        </p>
+    </div>
+
+    <div class="hero-card">
+        <span>Última carga total</span>
+        <strong>{% if exposicao %}{{ exposicao.carga_total|floatformat:2 }}{% else %}0.00{% endif %}</strong>
+        <small>{% if exposicao %}{{ exposicao.usuario }}{% else %}Nenhuma exposição calculada{% endif %}</small>
+    </div>
+</section>
+
+<section class="metrics-grid">
+    <article class="metric">
+        <span>Usuárias</span>
+        <strong>{{ total_usuarias }}</strong>
+    </article>
+    <article class="metric">
+        <span>Produtos</span>
+        <strong>{{ total_produtos }}</strong>
+    </article>
+    <article class="metric">
+        <span>Substâncias</span>
+        <strong>{{ total_substancias }}</strong>
+    </article>
+    <article class="metric">
+        <span>Alertas</span>
+        <strong>{{ total_alertas }}</strong>
+    </article>
+</section>
+
+<section class="content-grid">
+    <article class="panel">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Exposição</p>
+                <h2>Radar hormonal</h2>
+            </div>
+        </div>
+
+        <div class="chart-wrap">
+            <canvas id="radarChart"></canvas>
+        </div>
+    </article>
+
+    <article class="panel">
+        <p class="eyebrow">Comece por aqui</p>
+        <h2>Áreas principais</h2>
+
+        <div class="quick-links">
+            <a href="{% url 'saude:lista' 'usuarias' %}">Usuárias</a>
+            <a href="{% url 'saude:lista' 'produtos' %}">Produtos</a>
+            <a href="{% url 'saude:lista' 'substancias' %}">Substâncias</a>
+            <a href="{% url 'saude:lista' 'armario' %}">Armário virtual</a>
+            <a href="{% url 'saude:lista' 'registros-sintomas' %}">Sintomas registrados</a>
+            <a href="{% url 'saude:lista' 'alertas' %}">Alertas</a>
+        </div>
+    </article>
+</section>
+
+<script>
+    const ctx = document.getElementById("radarChart");
+
+    new Chart(ctx, {
+        type: "radar",
+        data: {
+            labels: ["Estrogênica", "Androgênica", "Tireoidiana"],
+            datasets: [{
+                label: "Carga hormonal",
+                data: [
+                    {% if exposicao %}{{ exposicao.carga_estrogenica|default:0 }}{% else %}0{% endif %},
+                    {% if exposicao %}{{ exposicao.carga_androgenica|default:0 }}{% else %}0{% endif %},
+                    {% if exposicao %}{{ exposicao.carga_tireoidiana|default:0 }}{% else %}0{% endif %}
+                ],
+                backgroundColor: "rgba(218, 132, 143, .22)",
+                borderColor: "#2f4632",
+                pointBackgroundColor: "#d8848f",
+                pointBorderColor: "#2f4632"
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    grid: { color: "rgba(47, 70, 50, .16)" },
+                    angleLines: { color: "rgba(47, 70, 50, .16)" },
+                    pointLabels: { color: "#2f4632", font: { size: 13 } }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: "#2f4632" } }
+            }
+        }
+    });
+</script>
+{% endblock %}

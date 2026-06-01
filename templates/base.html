@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FLORA{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <input type="checkbox" id="menu-toggle" class="menu-toggle">
+
+    <aside class="sidebar">
+        <div class="brand">
+            <img src="{% static 'logoF.png' %}" alt="FLORA" class="brand-icon">
+            <img src="{% static 'logoNome.png' %}" alt="Flora" class="brand-name">
+        </div>
+
+        <nav class="nav">
+            <a href="{% url 'saude:dashboard' %}" class="nav-link">Dashboard</a>
+
+            <p class="nav-title">Administração</p>
+            {% for item in menu.admin %}
+                <a href="{% url 'saude:lista' item.slug %}" class="nav-link">{{ item.titulo }}</a>
+            {% endfor %}
+
+            <p class="nav-title">Usuária</p>
+            {% for item in menu.usuaria %}
+                <a href="{% url 'saude:lista' item.slug %}" class="nav-link">{{ item.titulo }}</a>
+            {% endfor %}
+
+            <p class="nav-title">Especialista</p>
+            {% for item in menu.especialista %}
+                <a href="{% url 'saude:lista' item.slug %}" class="nav-link">{{ item.titulo }}</a>
+            {% endfor %}
+
+            <p class="nav-title">Sistema</p>
+            <a href="/admin/" class="nav-link">Django Admin</a>
+        </nav>
+    </aside>
+
+    <label for="menu-toggle" class="overlay"></label>
+
+    <main class="app-shell">
+        <header class="topbar">
+            <label for="menu-toggle" class="hamburger" aria-label="Abrir menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </label>
+
+            <div>
+                <strong>FLORA</strong>
+                <span>Mapa hormonal pessoal</span>
+            </div>
+        </header>
+
+        {% if messages %}
+            <section class="messages">
+                {% for message in messages %}
+                    <div class="message">{{ message }}</div>
+                {% endfor %}
+            </section>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

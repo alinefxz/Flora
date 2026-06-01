@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ modo }} | {{ config.titulo }}{% endblock %}
+
+{% block content %}
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">{{ config.titulo }}</p>
+        <h1>{{ modo }}</h1>
+        <p>Preencha os campos necessários para manter o cadastro completo.</p>
+    </div>
+
+    <a href="{% url 'saude:lista' slug %}" class="btn-ghost">Voltar</a>
+</section>
+
+<section class="panel form-panel">
+    <form method="post" enctype="multipart/form-data" class="flora-form">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="form-errors">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="form-grid">
+            {% for field in form %}
+                <div class="form-field {% if field.field.widget.input_type == 'checkbox' %}checkbox-field{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <small>{{ field.help_text }}</small>
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <small class="error">{{ error }}</small>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Salvar</button>
+            <a href="{% url 'saude:lista' slug %}" class="btn-ghost">Cancelar</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
