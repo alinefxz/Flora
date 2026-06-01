@@ -9,6 +9,8 @@ class Categoria(models.Model):
 
     class Meta:
         ordering = ["nome"]
+        verbose_name = 'Categoria'
+        verbose_name_plural = 'Categorias'
 
     def __str__(self):
         return self.nome
@@ -20,6 +22,8 @@ class TipoDesregulador(models.Model):
 
     class Meta:
         ordering = ["nome"]
+        verbose_name = 'Tipo de Desregulador'
+        verbose_name_plural = 'Tipos de Desreguladores'
 
     def __str__(self):
         return self.nome
@@ -35,6 +39,8 @@ class Substancia(models.Model):
 
     class Meta:
         ordering = ["nome"]
+        verbose_name = 'Substância'
+        verbose_name_plural = 'Substâncias'
 
     def __str__(self):
         return self.nome
@@ -52,6 +58,8 @@ class Produto(models.Model):
 
     class Meta:
         ordering = ["nome", "marca"]
+        verbose_name = 'Produto'
+        verbose_name_plural = 'Produtos'
 
     def recalcular_nota_flora(self, salvar=True):
         risco = 0.0
@@ -78,6 +86,8 @@ class Ingrediente(models.Model):
 
     class Meta:
         ordering = ["nome"]
+        verbose_name = 'Ingrediente'
+        verbose_name_plural = 'Ingredientes'
 
     def __str__(self):
         return self.nome
@@ -91,6 +101,8 @@ class ProdutoIngrediente(models.Model):
 
     class Meta:
         unique_together = ("produto", "ingrediente")
+        verbose_name = 'Ingrediente do Produto'
+        verbose_name_plural = 'Ingredientes dos Produtos'
 
     def __str__(self):
         return f"{self.ingrediente} em {self.produto}"

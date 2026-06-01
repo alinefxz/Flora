@@ -17,6 +17,8 @@ class ArmarioItem(models.Model):
 
     class Meta:
         unique_together = ("usuario", "produto")
+        verbose_name = 'Item do Armário'
+        verbose_name_plural = 'Itens do Armário'
 
     def __str__(self):
         return f"{self.produto} - {self.usuario}"
@@ -28,6 +30,10 @@ class Sintoma(models.Model):
 
     def __str__(self):
         return self.nome
+    
+    class Meta:
+        verbose_name = 'Sintoma'
+        verbose_name_plural = 'Sintomas'
 
 
 class CicloMenstrual(models.Model):
@@ -39,6 +45,7 @@ class CicloMenstrual(models.Model):
 
     class Meta:
         ordering = ["-data_inicio"]
+        verbose_name = 'Ciclo Menstrual'
 
     def save(self, *args, **kwargs):
         if self.data_inicio and self.data_fim:
@@ -59,6 +66,7 @@ class RegistroSintoma(models.Model):
 
     class Meta:
         ordering = ["-data_ocorrencia"]
+        verbose_name = 'Sintoma'
 
     def save(self, *args, **kwargs):
         if not self.fase_ciclo:
@@ -80,6 +88,8 @@ class Exposicao(models.Model):
 
     class Meta:
         ordering = ["-data_calculo"]
+        verbose_name = 'Exposição'
+        verbose_name_plural = 'Exposições'
 
     def __str__(self):
         return f"{self.usuario} - {self.carga_total:.2f}"
@@ -109,6 +119,8 @@ class AlertaRisco(models.Model):
 
     class Meta:
         ordering = ["-data_emissao"]
+        verbose_name = 'Sintoma'
+        verbose_name_plural = 'Sintomas'
 
     def __str__(self):
         return f"{self.nivel_gravidade} - {self.usuario}"
@@ -123,6 +135,8 @@ class Notificacao(models.Model):
 
     class Meta:
         ordering = ["-data_envio"]
+        verbose_name = 'Notificação'
+        verbose_name_plural = 'Notificações'
 
     def __str__(self):
         return f"{self.tipo_notificacao} - {self.usuario}"

@@ -22,6 +22,8 @@ class Cidade(models.Model):
     class Meta:
         ordering = ["uf__sigla", "nome_cidade"]
         unique_together = ("nome_cidade", "uf")
+        verbose_name = 'Cidade'
+        verbose_name_plural = 'Cidades'
 
     def __str__(self):
         return f"{self.nome_cidade} - {self.uf.sigla}"
