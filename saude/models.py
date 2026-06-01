@@ -46,6 +46,7 @@ class CicloMenstrual(models.Model):
     class Meta:
         ordering = ["-data_inicio"]
         verbose_name = 'Ciclo Menstrual'
+        verbose_name_plural = 'Ciclos Menstruais'
 
     def save(self, *args, **kwargs):
         if self.data_inicio and self.data_fim:
@@ -66,7 +67,8 @@ class RegistroSintoma(models.Model):
 
     class Meta:
         ordering = ["-data_ocorrencia"]
-        verbose_name = 'Sintoma'
+        verbose_name = 'Registro de Sintoma'
+        verbose_name_plural = 'Registro de Sintomas'
 
     def save(self, *args, **kwargs):
         if not self.fase_ciclo:
@@ -103,6 +105,10 @@ class ExposicaoDetalhe(models.Model):
 
     def __str__(self):
         return f"{self.produto} - {self.substancia}"
+    
+    class Meta:
+        verbose_name = 'Detalhe da Exposição'
+        verbose_name_plural = 'Detalhes da Exposição'
 
 
 class AlertaRisco(models.Model):

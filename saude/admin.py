@@ -4,9 +4,9 @@ from .models import AlertaRisco, ArmarioItem, CicloMenstrual, Exposicao, Exposic
 
 class ExposicaoDetalheInline(admin.TabularInline):
     model = ExposicaoDetalhe
-    extra = 0
-    readonly_fields = ("produto", "substancia", "valor_contribuicao")
-
+    extra = 1
+    autocomplete_fields = ["produto", "substancia"]
+    fields = ("produto", "substancia", "valor_contribuicao")
 
 @admin.register(ArmarioItem)
 class ArmarioItemAdmin(admin.ModelAdmin):
@@ -40,11 +40,18 @@ class CicloMenstrualAdmin(admin.ModelAdmin):
 
 @admin.register(Exposicao)
 class ExposicaoAdmin(admin.ModelAdmin):
-    list_display = ("usuario", "carga_total", "carga_estrogenica", "carga_androgenica", "carga_tireoidiana", "data_calculo")
+    list_display = (
+        "usuario",
+        "carga_total",
+        "carga_estrogenica",
+        "carga_androgenica",
+        "carga_tireoidiana",
+        "data_calculo",
+    )
     list_filter = ("data_calculo",)
     search_fields = ("usuario__nome_completo",)
+    autocomplete_fields = ["usuario"]
     inlines = [ExposicaoDetalheInline]
-
 
 @admin.register(AlertaRisco)
 class AlertaRiscoAdmin(admin.ModelAdmin):

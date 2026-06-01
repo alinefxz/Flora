@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from saude.models import AlertaRisco, ArmarioItem, RegistroSintoma
+from saude.models import AlertaRisco, ArmarioItem, CicloMenstrual, RegistroSintoma
 from .models import Admin, Cidade, Especialista, PerfilHormonal, Pessoa, UF, Usuario
 
 
@@ -41,6 +41,11 @@ class RegistroSintomaInline(admin.TabularInline):
     ordering = ("-data_ocorrencia",)
     autocomplete_fields = ["sintoma"]
 
+class CicloMenstrualInline(admin.TabularInline):
+    model = CicloMenstrual
+    extra = 1
+    fields = ("data_inicio", "data_fim", "duracao", "observacoes")
+    ordering = ("-data_inicio",)
 
 class AlertaRiscoInline(admin.TabularInline):
     model = AlertaRisco
@@ -73,7 +78,13 @@ class UsuarioAdmin(PessoaAdminBase):
     fieldsets = PessoaAdminBase.fieldsets + (
         ("Perfil de usuária", {"fields": ("apelido", "foto_perfil")}),
     )
-    inlines = [PerfilHormonalInline, ArmarioItemInline, RegistroSintomaInline, AlertaRiscoInline]
+    inlines = [
+    PerfilHormonalInline,
+    CicloMenstrualInline,
+    ArmarioItemInline,
+    RegistroSintomaInline,
+    AlertaRiscoInline,
+    ]
 
 
 @admin.register(Especialista)
