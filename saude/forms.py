@@ -231,3 +231,76 @@ class NotificacaoForm(FloraFormMixin, forms.ModelForm):
     class Meta:
         model = Notificacao
         fields = ["usuario", "mensagem", "tipo_notificacao", "lida"]
+
+
+
+
+from django.contrib.auth import get_user_model
+
+
+class LoginForm(forms.Form):
+    email = forms.EmailField(label="E-mail")
+    senha = forms.CharField(label="Senha", widget=forms.PasswordInput)
+
+
+class CadastroForm(FloraFormMixin, forms.ModelForm):
+    TIPO_CHOICES = [
+        ("USUARIA", "Sou usuária"),
+        ("ESPECIALISTA", "Sou especialista"),
+    ]
+
+    tipo_usuario = forms.ChoiceField(label="Tipo de cadastro", choices=TIPO_CHOICES)
+    senha = forms.CharField(label="Senha", widget=forms.PasswordInput)
+    confirmar_senha = forms.CharField(label="Confirmar senha", widget=forms.PasswordInput)
+
+    class Meta:
+        model = Pessoa
+        fields = [
+            "tipo_usuario",
+            "username",
+            "email",
+            "nome_completo",
+            "cpf",
+            "data_nasc",
+            "cidade",
+            "apelido",
+            "foto_perfil",
+            "registro_profissional",
+            "especialidade",
+            "biografia",
+        ]
+
+    def clean(self):
+        cleaned = super().clean()
+
+        if cleaned.get("senha") != cleaned.get("confirmar_senha"):
+            self.add_error("confirmar_senha", "As senhas não conferem.")
+
+        if cleaned.get("tipo_usuario") == "ESPECIALISTA":
+            if not cleaned.get("registro_profissional"):
+                self.add_error("registro_profissional", "Informe o registro profissional.")
+            if not cleaned.get("especialidade"):
+                self.add_error("especialidade", "Informe a especialidade.")
+
+        return cleaned
+
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        obj.tipo_usuario = self.cleaned_data["tipo_usuario"]
+        obj.ativo = True
+        obj.is_staff = False
+        obj.is_superuser = False
+        obj.set_password(self.cleaned_data["senha"])
+
+        if obj.tipo_usuario == "USUARIA":
+            obj.registro_profissional = ""
+            obj.especialidade = ""
+            obj.biografia = ""
+
+        if obj.tipo_usuario == "ESPECIALISTA":
+            obj.apelido = ""
+
+        if commit:
+            obj.save()
+
+        return obj

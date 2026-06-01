@@ -2,26 +2,29 @@
 {% load flora_tags %}
 
 {% block title %}Detalhe | {{ config.titulo }}{% endblock %}
+{% block page_name %}{{ config.titulo }}{% endblock %}
 
 {% block content %}
-<section class="page-heading">
+<section class="page-intro">
     <div>
-        <p class="eyebrow">{{ config.titulo }}</p>
+        <p class="eyebrow">Detalhe</p>
         <h1>{{ obj }}</h1>
-        <p>Visualização completa do registro.</p>
+        <p>Visualização completa deste registro.</p>
     </div>
 
     <div class="heading-actions">
-        <a href="{% url 'saude:editar' slug obj.pk %}" class="btn-primary">Editar</a>
+        {% if not config.somente_leitura %}
+            <a href="{% url 'saude:editar' slug obj.pk %}" class="btn-primary">Editar</a>
+        {% endif %}
         <a href="{% url 'saude:lista' slug %}" class="btn-ghost">Voltar</a>
     </div>
 </section>
 
-<section class="panel detail-panel">
+<section class="soft-panel">
     <dl class="detail-grid">
         {% for campo in campos %}
             <div>
-                <dt>{{ campo|capfirst }}</dt>
+                <dt>{{ campo|labelize }}</dt>
                 <dd>{{ obj|get_attr:campo }}</dd>
             </div>
         {% endfor %}

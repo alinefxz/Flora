@@ -6,42 +6,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}FLORA{% endblock %}</title>
 
+    <link rel="icon" type="image/png" href="{% static 'logoF.png' %}">
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <input type="checkbox" id="menu-toggle" class="menu-toggle">
+    <input type="checkbox" id="menu-toggle" class="menu-toggle" checked>
 
     <aside class="sidebar">
         <div class="brand">
             <img src="{% static 'logoF.png' %}" alt="FLORA" class="brand-icon">
-            <img src="{% static 'logoNome.png' %}" alt="Flora" class="brand-name">
+            <div class="brand-text">
+                <strong>flora</strong>
+                <span>mapa hormonal</span>
+            </div>
         </div>
 
         <nav class="nav">
             <a href="{% url 'saude:dashboard' %}" class="nav-link">Dashboard</a>
 
-            <p class="nav-title">Administração</p>
-            {% for item in menu.admin %}
-                <a href="{% url 'saude:lista' item.slug %}" class="nav-link">{{ item.titulo }}</a>
-            {% endfor %}
+            {% if user.is_authenticated %}
+                {% if user.is_superuser or user.tipo_usuario == "ADMIN" %}
+                    <p class="nav-title">Administração</p>
+                    {% for item in menu.admin %}
+                        <a href="{% url 'saude:lista' item.slug %}" class="nav-link">{{ item.titulo }}</a>
+                    {% endfor %}
+                {% endif %}
 
-            <p class="nav-title">Usuária</p>
-            {% for item in menu.usuaria %}
-                <a href="{% url 'saude:lista' item.slug %}" class="nav-link">{{ item.titulo }}</a>
-            {% endfor %}
+                {% if user.is_superuser or user.tipo_usuario == "ADMIN" or user.tipo_usuario == "USUARIA" %}
+                    <p class="nav-title">Usuária</p>
+                    {% for item in menu.usuaria %}
+                        <a href="{% url 'saude:lista' item.slug %}" class="nav-link">{{ item.titulo }}</a>
+                    {% endfor %}
+                {% endif %}
 
-            <p class="nav-title">Especialista</p>
-            {% for item in menu.especialista %}
-                <a href="{% url 'saude:lista' item.slug %}" class="nav-link">{{ item.titulo }}</a>
-            {% endfor %}
+                {% if user.is_superuser or user.tipo_usuario == "ADMIN" or user.tipo_usuario == "ESPECIALISTA" %}
+                    <p class="nav-title">Especialista</p>
+                    {% for item in menu.especialista %}
+                        <a href="{% url 'saude:lista' item.slug %}" class="nav-link">{{ item.titulo }}</a>
+                    {% endfor %}
+                {% endif %}
 
-            <p class="nav-title">Sistema</p>
-            <a href="/admin/" class="nav-link">Django Admin</a>
+                {% if user.is_superuser %}
+                    <p class="nav-title">Sistema</p>
+                    <a href="/admin/" class="nav-link">Django Admin</a>
+                {% endif %}
+            {% endif %}
         </nav>
     </aside>
-
-    <label for="menu-toggle" class="overlay"></label>
 
     <main class="app-shell">
         <header class="topbar">
@@ -51,9 +63,17 @@
                 <span></span>
             </label>
 
-            <div>
-                <strong>FLORA</strong>
-                <span>Mapa hormonal pessoal</span>
+            <div class="topbar-title">
+                <strong>{% block page_name %}FLORA{% endblock %}</strong>
+                <span>{% if user.is_authenticated %}{{ user.nome_completo }}{% else %}Bem-vinda{% endif %}</span>
+            </div>
+
+            <div class="topbar-actions">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'saude:sair' %}" class="pill-link">Sair</a>
+                {% else %}
+                    <a href="{% url 'saude:entrar' %}" class="pill-link">Entrar</a>
+                {% endif %}
             </div>
         </header>
 

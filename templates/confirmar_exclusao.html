@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 
 {% block title %}Excluir | {{ config.titulo }}{% endblock %}
+{% block page_name %}{{ config.titulo }}{% endblock %}
 
 {% block content %}
-<section class="page-heading">
+<section class="page-intro">
     <div>
-        <p class="eyebrow">{{ config.titulo }}</p>
+        <p class="eyebrow">Exclusão</p>
         <h1>Excluir registro</h1>
-        <p>Essa ação remove o item selecionado do sistema.</p>
+        <p>Confira antes de remover este item.</p>
     </div>
 </section>
 
-<section class="panel danger-panel">
+<section class="soft-panel danger-panel">
     <h2>Tem certeza?</h2>
     <p>Você está prestes a excluir:</p>
     <strong>{{ obj }}</strong>

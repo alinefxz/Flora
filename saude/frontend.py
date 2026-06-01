@@ -16,6 +16,10 @@ from saude.forms import (
     ExposicaoForm, ExposicaoDetalheForm, AlertaRiscoForm, NotificacaoForm,
 )
 
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+from saude.forms import LoginForm, CadastroForm
 
 ADMIN = "admin"
 USUARIA = "usuaria"
@@ -217,6 +221,7 @@ ENTIDADES = {
     },
     "alertas": {
         "titulo": "Alertas de risco",
+        "somente_leitura": True,
         "subtitulo": "Mensagens emitidas com base no perfil e exposição.",
         "grupo": USUARIA,
         "model": AlertaRisco,
@@ -226,6 +231,7 @@ ENTIDADES = {
     },
     "notificacoes": {
         "titulo": "Notificações",
+        "somente_leitura": True,
         "subtitulo": "Comunicações enviadas para usuárias.",
         "grupo": USUARIA,
         "model": Notificacao,
@@ -270,13 +276,83 @@ def get_queryset(config, request):
 
     return qs
 
+def destino_por_usuario(user):
+    if not user.is_authenticated:
+        return "saude:entrar"
 
+    if user.is_superuser or user.tipo_usuario == "ADMIN":
+        return "saude:dashboard"
+
+    if user.tipo_usuario == "ESPECIALISTA":
+        return "saude:lista", {"slug": "substancias"}
+
+    return "saude:lista", {"slug": "armario"}
+
+
+def entrar(request):
+    if request.user.is_authenticated:
+        destino = destino_por_usuario(request.user)
+        if isinstance(destino, tuple):
+            return redirect(destino[0], **destino[1])
+        return redirect(destino)
+
+    form = LoginForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        user = authenticate(
+            request,
+            username=form.cleaned_data["email"],
+            password=form.cleaned_data["senha"],
+        )
+
+        if user:
+            login(request, user)
+            destino = destino_por_usuario(user)
+            if isinstance(destino, tuple):
+                return redirect(destino[0], **destino[1])
+            return redirect(destino)
+
+        messages.error(request, "E-mail ou senha inválidos.")
+
+    return render(request, "entrar.html", {"form": form})
+
+
+def cadastrar(request):
+    if request.user.is_authenticated:
+        return redirect("saude:dashboard")
+
+    form = CadastroForm(request.POST or None, request.FILES or None)
+
+    if request.method == "POST" and form.is_valid():
+        user = form.save()
+        login(request, user)
+        destino = destino_por_usuario(user)
+        if isinstance(destino, tuple):
+            return redirect(destino[0], **destino[1])
+        return redirect(destino)
+
+    return render(request, "cadastrar.html", {"form": form})
+
+
+def sair(request):
+    logout(request)
+    return redirect("saude:entrar")
+
+@login_required(login_url="saude:entrar")
 def dashboard(request):
     total_usuarias = Usuario.objects.filter(tipo_usuario="USUARIA").count()
     total_produtos = Produto.objects.count()
     total_substancias = Substancia.objects.count()
     total_alertas = AlertaRisco.objects.count()
     exposicao = Exposicao.objects.order_by("-data_calculo").first()
+
+    radar_valores = [0, 0, 0]
+    if exposicao:
+        radar_valores = [
+            float(exposicao.carga_estrogenica or 0),
+            float(exposicao.carga_androgenica or 0),
+            float(exposicao.carga_tireoidiana or 0),
+        ]
 
     contexto = {
         "menu": menu_context(),
@@ -285,6 +361,7 @@ def dashboard(request):
         "total_substancias": total_substancias,
         "total_alertas": total_alertas,
         "exposicao": exposicao,
+        "radar_valores": radar_valores,
     }
     return render(request, "dashboard.html", contexto)
 
@@ -322,6 +399,9 @@ def criar(request, slug):
     config = get_config(slug)
     form_class = config["form"]
 
+    if config.get("somente_leitura"):
+        return HttpResponseForbidden("Este registro é gerado automaticamente pelo sistema.")
+
     if request.method == "POST":
         form = form_class(request.POST, request.FILES)
         if form.is_valid():
@@ -330,6 +410,7 @@ def criar(request, slug):
             return redirect("saude:lista", slug=slug)
     else:
         form = form_class()
+        
 
     return render(request, "formulario.html", {
         "menu": menu_context(),
@@ -344,6 +425,9 @@ def editar(request, slug, pk):
     config = get_config(slug)
     obj = get_object_or_404(config["model"], pk=pk)
     form_class = config["form"]
+
+    if config.get("somente_leitura"):
+        return HttpResponseForbidden("Este registro é gerado automaticamente pelo sistema.")
 
     if request.method == "POST":
         form = form_class(request.POST, request.FILES, instance=obj)
@@ -366,6 +450,9 @@ def editar(request, slug, pk):
 def excluir(request, slug, pk):
     config = get_config(slug)
     obj = get_object_or_404(config["model"], pk=pk)
+
+    if config.get("somente_leitura"):
+        return HttpResponseForbidden("Este registro é gerado automaticamente pelo sistema.")
 
     if request.method == "POST":
         obj.delete()

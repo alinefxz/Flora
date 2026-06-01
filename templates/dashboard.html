@@ -1,46 +1,47 @@
 {% extends "base.html" %}
 
 {% block title %}Dashboard | FLORA{% endblock %}
+{% block page_name %}Dashboard{% endblock %}
 
 {% block content %}
-<section class="hero">
-    <div class="hero-copy">
-        <p class="eyebrow">Saúde feminina e exposição química</p>
-        <h1>Um painel simples para acompanhar riscos, sintomas e produtos.</h1>
+<section class="home-hero">
+    <div>
+        <p class="eyebrow">Mapa hormonal pessoal</p>
+        <h1>Um jeito mais humano de enxergar exposição, rotina e sintomas.</h1>
         <p>
-            Organize usuárias, produtos, substâncias, ciclos, sintomas, alertas e sugestões
-            em um só lugar, com a delicadeza visual da identidade FLORA.
+            O FLORA conecta produtos, substâncias, ciclos e sinais do corpo para transformar dados químicos
+            em acompanhamento claro e acolhedor.
         </p>
     </div>
 
-    <div class="hero-card">
-        <span>Última carga total</span>
+    <div class="hero-bloom">
+        <span>carga atual</span>
         <strong>{% if exposicao %}{{ exposicao.carga_total|floatformat:2 }}{% else %}0.00{% endif %}</strong>
-        <small>{% if exposicao %}{{ exposicao.usuario }}{% else %}Nenhuma exposição calculada{% endif %}</small>
+        <small>{% if exposicao %}{{ exposicao.usuario }}{% else %}sem cálculo ainda{% endif %}</small>
     </div>
 </section>
 
-<section class="metrics-grid">
-    <article class="metric">
+<section class="petal-grid">
+    <article class="petal-card">
         <span>Usuárias</span>
         <strong>{{ total_usuarias }}</strong>
     </article>
-    <article class="metric">
+    <article class="petal-card">
         <span>Produtos</span>
         <strong>{{ total_produtos }}</strong>
     </article>
-    <article class="metric">
+    <article class="petal-card">
         <span>Substâncias</span>
         <strong>{{ total_substancias }}</strong>
     </article>
-    <article class="metric">
+    <article class="petal-card">
         <span>Alertas</span>
         <strong>{{ total_alertas }}</strong>
     </article>
 </section>
 
-<section class="content-grid">
-    <article class="panel">
+<section class="dashboard-grid">
+    <article class="soft-panel">
         <div class="section-heading">
             <div>
                 <p class="eyebrow">Exposição</p>
@@ -53,22 +54,36 @@
         </div>
     </article>
 
-    <article class="panel">
-        <p class="eyebrow">Comece por aqui</p>
-        <h2>Áreas principais</h2>
+    <article class="soft-panel">
+        <p class="eyebrow">Atalhos</p>
+        <h2>Rotina FLORA</h2>
 
-        <div class="quick-links">
-            <a href="{% url 'saude:lista' 'usuarias' %}">Usuárias</a>
-            <a href="{% url 'saude:lista' 'produtos' %}">Produtos</a>
-            <a href="{% url 'saude:lista' 'substancias' %}">Substâncias</a>
-            <a href="{% url 'saude:lista' 'armario' %}">Armário virtual</a>
-            <a href="{% url 'saude:lista' 'registros-sintomas' %}">Sintomas registrados</a>
-            <a href="{% url 'saude:lista' 'alertas' %}">Alertas</a>
+        <div class="garden-links">
+            {% if user.is_superuser or user.tipo_usuario == "ADMIN" %}
+                <a href="{% url 'saude:lista' 'usuarias' %}">Usuárias</a>
+                <a href="{% url 'saude:lista' 'produtos' %}">Produtos</a>
+                <a href="{% url 'saude:lista' 'substancias' %}">Substâncias</a>
+            {% endif %}
+
+            {% if user.tipo_usuario == "USUARIA" or user.is_superuser %}
+                <a href="{% url 'saude:lista' 'armario' %}">Armário virtual</a>
+                <a href="{% url 'saude:lista' 'ciclos' %}">Ciclos</a>
+                <a href="{% url 'saude:lista' 'registros-sintomas' %}">Sintomas</a>
+            {% endif %}
+
+            {% if user.tipo_usuario == "ESPECIALISTA" or user.is_superuser %}
+                <a href="{% url 'saude:lista' 'referencias' %}">Referências</a>
+                <a href="{% url 'saude:lista' 'sugestoes' %}">Sugestões</a>
+                <a href="{% url 'saude:lista' 'detalhes-exposicao' %}">Detalhes da exposição</a>
+            {% endif %}
         </div>
     </article>
 </section>
 
+{{ radar_valores|json_script:"radar-values" }}
+
 <script>
+    const radarValues = JSON.parse(document.getElementById("radar-values").textContent);
     const ctx = document.getElementById("radarChart");
 
     new Chart(ctx, {
@@ -77,15 +92,13 @@
             labels: ["Estrogênica", "Androgênica", "Tireoidiana"],
             datasets: [{
                 label: "Carga hormonal",
-                data: [
-                    {% if exposicao %}{{ exposicao.carga_estrogenica|default:0 }}{% else %}0{% endif %},
-                    {% if exposicao %}{{ exposicao.carga_androgenica|default:0 }}{% else %}0{% endif %},
-                    {% if exposicao %}{{ exposicao.carga_tireoidiana|default:0 }}{% else %}0{% endif %}
-                ],
-                backgroundColor: "rgba(218, 132, 143, .22)",
+                data: radarValues,
+                backgroundColor: "rgba(216, 132, 143, .20)",
                 borderColor: "#2f4632",
+                borderWidth: 2,
                 pointBackgroundColor: "#d8848f",
-                pointBorderColor: "#2f4632"
+                pointBorderColor: "#2f4632",
+                pointRadius: 4
             }]
         },
         options: {
@@ -94,13 +107,18 @@
             scales: {
                 r: {
                     beginAtZero: true,
-                    grid: { color: "rgba(47, 70, 50, .16)" },
-                    angleLines: { color: "rgba(47, 70, 50, .16)" },
-                    pointLabels: { color: "#2f4632", font: { size: 13 } }
+                    grid: { color: "rgba(47, 70, 50, .14)" },
+                    angleLines: { color: "rgba(47, 70, 50, .18)" },
+                    pointLabels: {
+                        color: "#2f4632",
+                        font: { size: 13, weight: "600" }
+                    }
                 }
             },
             plugins: {
-                legend: { labels: { color: "#2f4632" } }
+                legend: {
+                    labels: { color: "#2f4632" }
+                }
             }
         }
     });

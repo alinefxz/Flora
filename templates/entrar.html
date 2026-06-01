@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar | FLORA</title>
+    <link rel="icon" type="image/png" href="{% static 'logoF.png' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="auth-body">
+    <main class="auth-shell">
+        <section class="auth-brand">
+            <img src="{% static 'logoF.png' %}" alt="FLORA">
+            <h1>flora</h1>
+            <p>Um espaço leve para observar produtos, sintomas e sinais do corpo com mais clareza.</p>
+        </section>
+
+        <section class="auth-card">
+            <p class="eyebrow">Acesso</p>
+            <h2>Entre na sua conta</h2>
+
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" class="flora-form">
+                {% csrf_token %}
+
+                {% for field in form %}
+                    <div class="form-field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% for error in field.errors %}
+                            <small class="error">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn-primary">Entrar</button>
+            </form>
+
+            <p class="auth-note">
+                Ainda não tem conta?
+                <a href="{% url 'saude:cadastrar' %}">Criar cadastro</a>
+            </p>
+        </section>
+    </main>
+</body>
+</html>

@@ -2,6 +2,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from produtos.models import Produto, Substancia
 from usuarios.models import Usuario
+from datetime import timedelta
 
 
 class ArmarioItem(models.Model):
@@ -45,12 +46,16 @@ class CicloMenstrual(models.Model):
 
     class Meta:
         ordering = ["-data_inicio"]
-        verbose_name = 'Ciclo Menstrual'
-        verbose_name_plural = 'Ciclos Menstruais'
+        verbose_name = "Ciclo Menstrual"
+        verbose_name_plural = "Ciclos Menstruais"
 
     def save(self, *args, **kwargs):
         if self.data_inicio and self.data_fim:
             self.duracao = (self.data_fim - self.data_inicio).days + 1
+
+        if self.data_inicio and not self.data_fim:
+            self.data_fim = self.data_inicio + timedelta(days=max(self.duracao, 1) - 1)
+
         super().save(*args, **kwargs)
 
     def __str__(self):
