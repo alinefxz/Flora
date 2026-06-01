@@ -1,76 +1,77 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from usuarios.models import Usuario
 from produtos.models import Produto, Substancia
+from usuarios.models import Usuario
+
 
 class ArmarioItem(models.Model):
-    # RF12 - Gerenciar Armário Virtual (RN02 pesos de uso) 
     FREQUENCIA_CHOICES = [
-        (3.0, 'Diário'),
-        (1.0, 'Semanal'),
-        (0.5, 'Esporádico'),
+        (3.0, "Diário"),
+        (1.0, "Semanal"),
+        (0.5, "Esporádico"),
     ]
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='armario')
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
+
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="armario")
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="usuarios_no_armario")
     frequencia_uso = models.FloatField(choices=FREQUENCIA_CHOICES, default=1.0)
 
     class Meta:
-        unique_together = ('usuario', 'produto')
-        verbose_name = "Item do Armário Virtual"
-        verbose_name_plural = "Itens do Armário Virtual"
+        unique_together = ("usuario", "produto")
 
     def __str__(self):
-        return f"{self.produto.nome} no armário de {self.usuario.nome_completo}"
+        return f"{self.produto} - {self.usuario}"
 
 
 class Sintoma(models.Model):
-    # RF13 - Gerenciar Sintomas 
     nome = models.CharField(max_length=100, unique=True)
-    descricao = models.TextField()
-
-    class Meta:
-        verbose_name = "Sintoma"
-        verbose_name_plural = "Sintomas"
+    descricao = models.TextField(blank=True)
 
     def __str__(self):
         return self.nome
-    
 
-class RegistroSintoma(models.Model):
-    # RF14 - Registrar Diário de Ciclo 
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='diario_sintomas')
-    sintoma = models.ForeignKey(Sintoma, on_delete=models.CASCADE)
-    data_ocorrencia = models.DateField()
-    intensidade = models.IntegerField(choices=[(i, i) for i in range(1, 6)], help_text="Escala de dor/incômodo de 1 a 5")
-    fase_ciclo = models.CharField(max_length=50)
-    observacoes = models.TextField(blank=True)
-
-    class Meta:
-        verbose_name = "Registro de Sintoma"
-        verbose_name_plural = "Registros de Sintomas"
-
-    def __str__(self):
-        return f"{self.usuario.nome_completo} - {self.sintoma.nome} ({self.data_ocorrencia})"
-    
 
 class CicloMenstrual(models.Model):
-    # RF15 - Registrar Ciclo Menstrual 
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='ciclos')
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="ciclos")
     data_inicio = models.DateField()
     data_fim = models.DateField(null=True, blank=True)
-    duracao = models.IntegerField(help_text="Duração em dias calculada automaticamente")
+    duracao = models.PositiveIntegerField(default=5)
     observacoes = models.TextField(blank=True)
 
     class Meta:
-        verbose_name = "Ciclo Menstrual"
-        verbose_name_plural = "Ciclos Menstruais"
+        ordering = ["-data_inicio"]
+
+    def save(self, *args, **kwargs):
+        if self.data_inicio and self.data_fim:
+            self.duracao = (self.data_fim - self.data_inicio).days + 1
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"Ciclo iniciado em {self.data_inicio} - {self.usuario.nome_completo}"
-    
+        return f"{self.usuario} - {self.data_inicio}"
+
+
+class RegistroSintoma(models.Model):
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="diario_sintomas")
+    sintoma = models.ForeignKey(Sintoma, on_delete=models.CASCADE, related_name="registros")
+    data_ocorrencia = models.DateField()
+    intensidade = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    fase_ciclo = models.CharField(max_length=50, blank=True)
+    observacoes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-data_ocorrencia"]
+
+    def save(self, *args, **kwargs):
+        if not self.fase_ciclo:
+            from .services import calcular_fase_menstrual
+            self.fase_ciclo = calcular_fase_menstrual(self.usuario, self.data_ocorrencia)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.usuario} - {self.sintoma} - {self.data_ocorrencia}"
+
 
 class Exposicao(models.Model):
-    # RF16 - Registrar Exposição
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='historico_exposicoes')
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="historico_exposicoes")
     carga_estrogenica = models.FloatField(default=0.0)
     carga_androgenica = models.FloatField(default=0.0)
     carga_tireoidiana = models.FloatField(default=0.0)
@@ -78,60 +79,50 @@ class Exposicao(models.Model):
     data_calculo = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Exposição"
-        verbose_name_plural = "Histórico de Exposições"
+        ordering = ["-data_calculo"]
 
     def __str__(self):
-        return f"Carga {self.carga_total} em {self.data_calculo.strftime('%d/%m/%Y')}"
+        return f"{self.usuario} - {self.carga_total:.2f}"
 
 
 class ExposicaoDetalhe(models.Model):
-    # RF17 - Registrar Detalhamento da Exposição 
-    exposicao = models.ForeignKey(Exposicao, on_delete=models.CASCADE, related_name='detalhes')
+    exposicao = models.ForeignKey(Exposicao, on_delete=models.CASCADE, related_name="detalhes")
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE)
     substancia = models.ForeignKey(Substancia, on_delete=models.CASCADE)
-    valor_contribuicao = models.FloatField(help_text="Contribuição fracionada desta substância no cálculo total")
-
-    class Meta:
-        verbose_name = "Detalhe da Exposição"
-        verbose_name_plural = "Detalhes das Exposições"
+    valor_contribuicao = models.FloatField()
 
     def __str__(self):
-        return f"Detalhe {self.substancia.nome} - {self.exposicao.usuario.nome_completo}"
+        return f"{self.produto} - {self.substancia}"
 
 
 class AlertaRisco(models.Model):
-    # RF24 - Emitir alertas de risco (Baseado nas metas da RN04 e RN05)
     GRAVIDADE_CHOICES = [
-        ('VERDE', 'Verde (Abaixo de 50%)'),
-        ('AMARELO', 'Amarelo (Entre 50% e 75%)'),
-        ('VERMELHO', 'Vermelho (Acima de 75%)'),
+        ("VERDE", "Verde"),
+        ("AMARELO", "Amarelo"),
+        ("VERMELHO", "Vermelho"),
     ]
-    
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='alertas_risco')
+
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="alertas_risco")
     mensagem_alerta = models.TextField()
     nivel_gravidade = models.CharField(max_length=10, choices=GRAVIDADE_CHOICES)
     data_emissao = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Alerta de Risco"
-        verbose_name_plural = "Alertas de Risco"
+        ordering = ["-data_emissao"]
 
     def __str__(self):
-        return f"Alerta {self.nivel_gravidade} - {self.usuario.nome_completo}"
+        return f"{self.nivel_gravidade} - {self.usuario}"
 
 
 class Notificacao(models.Model):
-    # RF25 - Gerenciar Notificações
-    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name='notificacoes')
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE, related_name="notificacoes")
     mensagem = models.TextField()
     tipo_notificacao = models.CharField(max_length=100)
     lida = models.BooleanField(default=False)
     data_envio = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name = "Notificação"
-        verbose_name_plural = "Notificações"
+        ordering = ["-data_envio"]
 
     def __str__(self):
-        return f"Notificação para {self.usuario.nome_completo} - Lida: {self.lida}"
+        return f"{self.tipo_notificacao} - {self.usuario}"

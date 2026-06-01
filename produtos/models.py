@@ -1,125 +1,121 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from usuarios.models import Especialista
 
+
 class Categoria(models.Model):
-    # RF06 - Gerenciar Categorias 
     nome = models.CharField(max_length=100, unique=True)
     descricao = models.TextField(blank=True)
 
     class Meta:
-        verbose_name = "Categoria"
-        verbose_name_plural = "Categorias"
+        ordering = ["nome"]
 
     def __str__(self):
         return self.nome
 
 
 class TipoDesregulador(models.Model):
-    # RF11 - Gerenciar Eixos Hormonais
-    nome = models.CharField(max_length=100, help_text="Ex: Estrogênico, Androgênico, Tireoidiano")
-    descricao = models.TextField()
+    nome = models.CharField(max_length=100, unique=True)
+    descricao = models.TextField(blank=True)
 
     class Meta:
-        verbose_name = "Eixo Hormonal / Tipo Desregulador"
-        verbose_name_plural = "Eixos Hormonais (Tipos)"
+        ordering = ["nome"]
 
     def __str__(self):
         return self.nome
 
 
 class Substancia(models.Model):
-    # RF10 - Gerenciar Desreguladores
     nome = models.CharField(max_length=150)
-    cas_number = models.CharField(max_length=50, unique=True, help_text="Identificador químico universal")
-    nivel_risco = models.IntegerField(choices=[(i, i) for i in range(1, 6)], help_text="Nota de 1 a 5")
+    cas_number = models.CharField(max_length=50, unique=True)
+    nivel_risco = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     mecanismo_acao = models.TextField()
     descricao = models.TextField(blank=True)
-    tipo_desregulador = models.ForeignKey(TipoDesregulador, on_delete=models.PROTECT, related_name='substancias')
+    tipo_desregulador = models.ForeignKey(TipoDesregulador, on_delete=models.PROTECT, related_name="substancias")
 
     class Meta:
-        verbose_name = "Substância Química"
-        verbose_name_plural = "Substâncias Químicas"
+        ordering = ["nome"]
 
     def __str__(self):
         return self.nome
 
 
 class Produto(models.Model):
-    # RF07 - Gerenciar Produtos
     nome = models.CharField(max_length=255)
     marca = models.CharField(max_length=100)
-    codigo_barras = models.CharField(max_length=13, unique=True, help_text="Código GTIN/EAN")
-    imagem = models.ImageField(upload_to='produtos/', null=True, blank=True)
-    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='produtos')
+    codigo_barras = models.CharField(max_length=14, unique=True)
+    imagem = models.ImageField(upload_to="produtos/", null=True, blank=True)
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name="produtos")
     descricao = models.TextField(blank=True)
-    fabricante = models.CharField(max_length=150)
-    nota_flora = models.FloatField(default=5.0, help_text="Calculada dinamicamente de 1 a 5 (RN03)")
+    fabricante = models.CharField(max_length=150, blank=True)
+    nota_flora = models.FloatField(default=5.0)
 
     class Meta:
-        verbose_name = "Produto"
-        verbose_name_plural = "Produtos"
+        ordering = ["nome", "marca"]
+
+    def recalcular_nota_flora(self, salvar=True):
+        risco = 0.0
+        for item in self.composicao.select_related("ingrediente__substancia"):
+            substancia = item.ingrediente.substancia
+            if substancia:
+                risco += substancia.nivel_risco * max(item.concentracao_estimada, 0)
+
+        self.nota_flora = 5.0 if risco == 0 else round(max(1.0, 5.0 - min(4.0, risco)), 2)
+
+        if salvar:
+            self.save(update_fields=["nota_flora"])
+
+        return self.nota_flora
 
     def __str__(self):
         return f"{self.nome} ({self.marca})"
 
 
 class Ingrediente(models.Model):
-    # RF08 - Gerenciar Ingredientes 
     nome = models.CharField(max_length=150)
-    funcao_quimica = models.CharField(max_length=100, help_text="Ex: Conservante, Emulsificante")
-    substancia = models.ForeignKey(Substancia, on_delete=models.SET_NULL, null=True, blank=True, related_name='ingredientes')
+    funcao_quimica = models.CharField(max_length=100, blank=True)
+    substancia = models.ForeignKey(Substancia, on_delete=models.SET_NULL, null=True, blank=True, related_name="ingredientes")
 
     class Meta:
-        verbose_name = "Ingrediente Rotulado"
-        verbose_name_plural = "Ingredientes Cadastrados"
+        ordering = ["nome"]
 
     def __str__(self):
         return self.nome
 
 
 class ProdutoIngrediente(models.Model):
-    # RF09 - Gerenciar Composição 
-    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='composicao')
-    ingrediente = models.ForeignKey(Ingrediente, on_delete=models.CASCADE)
-    concentracao_estimada = models.FloatField(help_text="Valor numérico bruto")
-    unidade_concentracao = models.CharField(max_length=10, default='%', help_text="Ex: %, ppm, mg/kg")
+    produto = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="composicao")
+    ingrediente = models.ForeignKey(Ingrediente, on_delete=models.CASCADE, related_name="produtos")
+    concentracao_estimada = models.FloatField(default=0.0)
+    unidade_concentracao = models.CharField(max_length=20, default="%")
 
     class Meta:
-        unique_together = ('produto', 'ingrediente')
-        verbose_name = "Ingrediente do Produto"
-        verbose_name_plural = "Fórmulas / Composição dos Produtos"
+        unique_together = ("produto", "ingrediente")
+
+    def __str__(self):
+        return f"{self.ingrediente} em {self.produto}"
 
 
 class SugestaoTroca(models.Model):
-    # RF18 - Sugerir Substituições (RN07) 
-    produto_risco = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='sugestoes_de_substituicao')
-    produto_seguro = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name='alternativas_seguras')
+    produto_risco = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="sugestoes_de_substituicao")
+    produto_seguro = models.ForeignKey(Produto, on_delete=models.CASCADE, related_name="alternativas_seguras")
     justificativa_tecnica = models.TextField()
     origem_sugestao = models.CharField(max_length=100, default="Base de Dados Flora")
-    confianca = models.FloatField(default=1.0, help_text="Grau de certeza estatística do algoritmo/médico")
+    confianca = models.FloatField(default=1.0, validators=[MinValueValidator(0), MaxValueValidator(1)])
     especialista = models.ForeignKey(Especialista, on_delete=models.SET_NULL, null=True, blank=True)
 
-    class Meta:
-        verbose_name = "Sugestão de Troca"
-        verbose_name_plural = "Sugestões de Trocas Saudáveis"
-
     def __str__(self):
-        return f"Trocar {self.produto_risco.nome} por {self.produto_seguro.nome}"
+        return f"{self.produto_risco} -> {self.produto_seguro}"
 
 
 class Referencia(models.Model):
-    # RF19 - Gerenciar Referências 
     titulo_artigo = models.CharField(max_length=255)
     autores = models.TextField()
-    ano_publicacao = models.IntegerField()
-    link_doi = models.URLField()
-    instituicao_fonte = models.CharField(max_length=255)
-    substancia = models.ForeignKey(Substancia, on_delete=models.CASCADE, related_name='referencias')
-    arquivo_artigo = models.FileField(upload_to='artigos_cientificos/', null=True, blank=True) # Atende UI-vi
-
-    class Meta:
-        verbose_name = "Referência Científica"
-        verbose_name_plural = "Referências Científicas (Artigos)"
+    ano_publicacao = models.PositiveIntegerField()
+    link_doi = models.URLField(blank=True)
+    instituicao_fonte = models.CharField(max_length=255, blank=True)
+    substancia = models.ForeignKey(Substancia, on_delete=models.CASCADE, related_name="referencias")
+    arquivo_artigo = models.FileField(upload_to="artigos_cientificos/", null=True, blank=True)
 
     def __str__(self):
         return self.titulo_artigo
