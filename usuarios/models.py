@@ -125,3 +125,7 @@ class PerfilHormonal(models.Model):
 
     def __str__(self):
         return f"Perfil hormonal de {self.usuario.nome_completo}"
+    
+    class Meta:
+        verbose_name = 'Perfil Hormonal'
+        verbose_name_plural = 'Perfis Hormonais'

@@ -119,8 +119,8 @@ class AlertaRisco(models.Model):
 
     class Meta:
         ordering = ["-data_emissao"]
-        verbose_name = 'Sintoma'
-        verbose_name_plural = 'Sintomas'
+        verbose_name = 'Alerta de Risco'
+        verbose_name_plural = 'Alertas de Riscos'
 
     def __str__(self):
         return f"{self.nivel_gravidade} - {self.usuario}"
