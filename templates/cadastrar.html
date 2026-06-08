@@ -7,7 +7,12 @@
     <title>Criar conta | FLORA</title>
 
     <link rel="icon" href="{% static 'logoF.png' %}">
-    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    {% load static %}
+    <link rel="icon" href="{% static 'img/logoF.png' %}">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}?v=4">
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=4">
     <script src="{% static 'js/cadastro.js' %}" defer></script>
 </head>
 <body class="auth-page">

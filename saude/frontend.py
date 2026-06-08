@@ -153,14 +153,14 @@ ENTIDADES = {
         "Produtos", "Catálogo", Produto, ProdutoForm,
         ["nome", "marca", "categoria", "fabricante", "nota_flora"],
         ["nome", "marca", "codigo_barras", "fabricante"],
-        visualizar=(ADMIN, ESPECIALISTA),
+        visualizar=(ADMIN, ESPECIALISTA, USUARIA),
     ),
     "ingredientes": entidade(
         "Ingredientes", "Catálogo", Ingrediente,
         IngredienteForm,
         ["nome", "funcao_quimica", "substancia"],
         ["nome", "funcao_quimica", "substancia__nome"],
-        visualizar=(ADMIN, ESPECIALISTA),
+        visualizar=(ADMIN, ESPECIALISTA, USUARIA),
     ),
     "composicoes": entidade(
         "Composição dos produtos", "Catálogo",
@@ -172,7 +172,7 @@ ENTIDADES = {
             "unidade_concentracao",
         ],
         ["produto__nome", "ingrediente__nome"],
-        visualizar=(ADMIN, ESPECIALISTA),
+        visualizar=(ADMIN, ESPECIALISTA, USUARIA),
     ),
     "tipos-desreguladores": entidade(
         "Eixos hormonais", "Análise técnica",
@@ -282,7 +282,7 @@ ENTIDADES = {
             "data_calculo",
         ],
         ["usuario__nome_completo"],
-        visualizar=(ADMIN, ESPECIALISTA, USUARIA),
+        visualizar=(ADMIN, USUARIA),
         editar=(),
         owner_lookup="usuario",
     ),
@@ -295,7 +295,7 @@ ENTIDADES = {
             "substancia__nome",
             "exposicao__usuario__nome_completo",
         ],
-        visualizar=(ADMIN, ESPECIALISTA, USUARIA),
+        visualizar=(ADMIN, USUARIA),
         editar=(),
         owner_lookup="exposicao__usuario",
     ),
@@ -551,8 +551,23 @@ def dashboard(request):
         atividades = request.user.notificacoes.all()[:4]
 
     elif perfil == ESPECIALISTA:
-        exposicao = Exposicao.objects.first()
+        exposicao = None
+
+        minhas_sugestoes = SugestaoTroca.objects.filter(
+            especialista=request.user
+        )
+
         metricas = [
+            {
+                "rotulo": "Minhas sugestões",
+                "valor": minhas_sugestoes.count(),
+                "url": reverse("saude:lista", args=["sugestoes"]),
+            },
+            {
+                "rotulo": "Produtos",
+                "valor": Produto.objects.count(),
+                "url": reverse("saude:lista", args=["produtos"]),
+            },
             {
                 "rotulo": "Substâncias",
                 "valor": Substancia.objects.count(),
@@ -563,18 +578,9 @@ def dashboard(request):
                 "valor": Referencia.objects.count(),
                 "url": reverse("saude:lista", args=["referencias"]),
             },
-            {
-                "rotulo": "Sugestões",
-                "valor": SugestaoTroca.objects.count(),
-                "url": reverse("saude:lista", args=["sugestoes"]),
-            },
-            {
-                "rotulo": "Produtos",
-                "valor": Produto.objects.count(),
-                "url": reverse("saude:lista", args=["produtos"]),
-            },
         ]
-        atividades = SugestaoTroca.objects.select_related(
+
+        atividades = minhas_sugestoes.select_related(
             "produto_risco",
             "produto_seguro",
         )[:4]
@@ -800,3 +806,9 @@ def marcar_notificacao(request, pk):
     notificacao.lida = True
     notificacao.save(update_fields=["lida"])
     return redirect("saude:lista", slug="notificacoes")
+
+# Produtos públicos para todos
+visualizar=(ADMIN, ESPECIALISTA, USUARIA),
+
+# Exposições e detalhes nunca aparecem para especialistas
+visualizar=(ADMIN, USUARIA),

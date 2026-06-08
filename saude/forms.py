@@ -209,7 +209,6 @@ class CadastroForm(FloraModelForm):
             numero = self.cleaned_data["numero_registro"].strip()
             pessoa.registro_profissional = f"{conselho}/{numero}"
             pessoa.apelido = ""
-            pessoa.foto_perfil = None
         else:
             pessoa.registro_profissional = ""
             pessoa.especialidade = ""
