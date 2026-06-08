@@ -1,316 +1,487 @@
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied
-from django.db.models import Q
-from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
-
-from usuarios.models import Pessoa, Usuario, Especialista, Admin, UF, Cidade, PerfilHormonal
-from produtos.models import Categoria, TipoDesregulador, Substancia, Produto, Ingrediente, ProdutoIngrediente, SugestaoTroca, Referencia
-from saude.models import ArmarioItem, Sintoma, CicloMenstrual, RegistroSintoma, Exposicao, ExposicaoDetalhe, AlertaRisco, Notificacao
-from saude.forms import (
-    PessoaForm, UsuarioForm, EspecialistaForm, AdminFloraForm,
-    UFForm, CidadeForm, PerfilHormonalForm,
-    CategoriaForm, TipoDesreguladorForm, SubstanciaForm, ProdutoForm,
-    IngredienteForm, ProdutoIngredienteForm, SugestaoTrocaForm, ReferenciaForm,
-    ArmarioItemForm, SintomaForm, CicloMenstrualForm, RegistroSintomaForm,
-    ExposicaoForm, ExposicaoDetalheForm, AlertaRiscoForm, NotificacaoForm,
-)
-
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
-from saude.forms import LoginForm, CadastroForm
+from django.core.exceptions import PermissionDenied
+from django.db.models import Q
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.views.decorators.http import require_POST
 
-ADMIN = "admin"
-USUARIA = "usuaria"
-ESPECIALISTA = "especialista"
+from produtos.models import (
+    Categoria,
+    Ingrediente,
+    Produto,
+    ProdutoIngrediente,
+    Referencia,
+    Substancia,
+    SugestaoTroca,
+    TipoDesregulador,
+)
+from usuarios.models import (
+    Admin,
+    Cidade,
+    Especialista,
+    PerfilHormonal,
+    Pessoa,
+    UF,
+    Usuario,
+)
+from .forms import (
+    AdminFloraForm,
+    ArmarioItemForm,
+    CadastroForm,
+    CategoriaForm,
+    CidadeForm,
+    CicloMenstrualForm,
+    EspecialistaForm,
+    IngredienteForm,
+    LoginForm,
+    PessoaForm,
+    PerfilHormonalForm,
+    ProdutoForm,
+    ProdutoIngredienteForm,
+    ReferenciaForm,
+    RegistroSintomaForm,
+    SintomaForm,
+    SubstanciaForm,
+    SugestaoTrocaForm,
+    TipoDesreguladorForm,
+    UFForm,
+    UsuarioForm,
+)
+from .models import (
+    AlertaRisco,
+    ArmarioItem,
+    CicloMenstrual,
+    Exposicao,
+    ExposicaoDetalhe,
+    Notificacao,
+    RegistroSintoma,
+    Sintoma,
+)
+
+
+ADMIN = "ADMIN"
+USUARIA = "USUARIA"
+ESPECIALISTA = "ESPECIALISTA"
+
+
+def entidade(
+    titulo,
+    secao,
+    model,
+    form,
+    colunas,
+    busca=(),
+    visualizar=(ADMIN,),
+    editar=(ADMIN,),
+    filtro=None,
+    owner_lookup=None,
+    owner_field=None,
+    specialist_field=None,
+):
+    return {
+        "titulo": titulo,
+        "secao": secao,
+        "model": model,
+        "form": form,
+        "colunas": colunas,
+        "busca": busca,
+        "visualizar": set(visualizar),
+        "editar": set(editar),
+        "filtro": filtro or {},
+        "owner_lookup": owner_lookup,
+        "owner_field": owner_field,
+        "specialist_field": specialist_field,
+    }
 
 
 ENTIDADES = {
-    "pessoas": {
-        "titulo": "Pessoas",
-        "subtitulo": "Base geral de contas e perfis do sistema.",
-        "grupo": ADMIN,
-        "model": Pessoa,
-        "form": PessoaForm,
-        "campos": ["nome_completo", "email", "cpf", "tipo_usuario", "ativo"],
-        "busca": ["nome_completo", "email", "cpf"],
-    },
-    "usuarias": {
-        "titulo": "Usuárias",
-        "subtitulo": "Cadastro de usuárias e dados pessoais.",
-        "grupo": ADMIN,
-        "model": Usuario,
-        "form": UsuarioForm,
-        "campos": ["nome_completo", "email", "cpf", "data_nasc", "apelido", "ativo"],
-        "busca": ["nome_completo", "email", "cpf", "apelido"],
-        "filtro": {"tipo_usuario": "USUARIA"},
-    },
-    "especialistas": {
-        "titulo": "Especialistas",
-        "subtitulo": "Profissionais responsáveis por análises e sugestões.",
-        "grupo": ADMIN,
-        "model": Especialista,
-        "form": EspecialistaForm,
-        "campos": ["nome_completo", "email", "registro_profissional", "especialidade", "ativo"],
-        "busca": ["nome_completo", "email", "registro_profissional", "especialidade"],
-        "filtro": {"tipo_usuario": "ESPECIALISTA"},
-    },
-    "administradores": {
-        "titulo": "Administradores",
-        "subtitulo": "Gestão de perfis administrativos.",
-        "grupo": ADMIN,
-        "model": Admin,
-        "form": AdminFloraForm,
-        "campos": ["nome_completo", "email", "nivel_acesso", "ativo", "is_superuser"],
-        "busca": ["nome_completo", "email", "nivel_acesso"],
-        "filtro": {"tipo_usuario": "ADMIN"},
-    },
-    "ufs": {
-        "titulo": "UFs",
-        "subtitulo": "Estados usados no cadastro de cidades.",
-        "grupo": ADMIN,
-        "model": UF,
-        "form": UFForm,
-        "campos": ["nome_estado", "sigla"],
-        "busca": ["nome_estado", "sigla"],
-    },
-    "cidades": {
-        "titulo": "Cidades",
-        "subtitulo": "Cidades vinculadas às UFs.",
-        "grupo": ADMIN,
-        "model": Cidade,
-        "form": CidadeForm,
-        "campos": ["nome_cidade", "uf"],
-        "busca": ["nome_cidade", "uf__sigla"],
-    },
-    "perfis-hormonais": {
-        "titulo": "Perfis hormonais",
-        "subtitulo": "Condições clínicas e sensibilidade hormonal.",
-        "grupo": USUARIA,
-        "model": PerfilHormonal,
-        "form": PerfilHormonalForm,
-        "campos": ["usuario", "uso_contraceptivo", "condicao_hormonal", "ciclo_regular", "duracao_ciclo", "fluxo_menstrual", "peso_sensibilidade"],
-        "busca": ["usuario__nome_completo", "condicao_hormonal"],
-    },
-    "categorias": {
-        "titulo": "Categorias",
-        "subtitulo": "Grupos de produtos, como maquiagem, higiene e plásticos.",
-        "grupo": ADMIN,
-        "model": Categoria,
-        "form": CategoriaForm,
-        "campos": ["nome", "descricao"],
-        "busca": ["nome", "descricao"],
-    },
-    "produtos": {
-        "titulo": "Produtos",
-        "subtitulo": "Produtos analisados pelo FLORA.",
-        "grupo": ADMIN,
-        "model": Produto,
-        "form": ProdutoForm,
-        "campos": ["nome", "marca", "codigo_barras", "categoria", "fabricante", "nota_flora"],
-        "busca": ["nome", "marca", "codigo_barras", "fabricante"],
-    },
-    "ingredientes": {
-        "titulo": "Ingredientes",
-        "subtitulo": "Ingredientes rotulados e sua função química.",
-        "grupo": ADMIN,
-        "model": Ingrediente,
-        "form": IngredienteForm,
-        "campos": ["nome", "funcao_quimica", "substancia"],
-        "busca": ["nome", "funcao_quimica", "substancia__nome"],
-    },
-    "composicoes": {
-        "titulo": "Composição dos produtos",
-        "subtitulo": "Relação entre produtos, ingredientes e concentrações.",
-        "grupo": ADMIN,
-        "model": ProdutoIngrediente,
-        "form": ProdutoIngredienteForm,
-        "campos": ["produto", "ingrediente", "concentracao_estimada", "unidade_concentracao"],
-        "busca": ["produto__nome", "ingrediente__nome"],
-    },
-    "substancias": {
-        "titulo": "Substâncias",
-        "subtitulo": "Desreguladores endócrinos e seus mecanismos de ação.",
-        "grupo": ADMIN,
-        "model": Substancia,
-        "form": SubstanciaForm,
-        "campos": ["nome", "cas_number", "nivel_risco", "tipo_desregulador"],
-        "busca": ["nome", "cas_number", "tipo_desregulador__nome"],
-    },
-    "tipos-desreguladores": {
-        "titulo": "Eixos hormonais",
-        "subtitulo": "Tipos de interferência hormonal.",
-        "grupo": ADMIN,
-        "model": TipoDesregulador,
-        "form": TipoDesreguladorForm,
-        "campos": ["nome", "descricao"],
-        "busca": ["nome", "descricao"],
-    },
-    "armario": {
-        "titulo": "Armário virtual",
-        "subtitulo": "Produtos usados pelas usuárias e frequência de uso.",
-        "grupo": USUARIA,
-        "model": ArmarioItem,
-        "form": ArmarioItemForm,
-        "campos": ["usuario", "produto", "frequencia_uso"],
-        "busca": ["usuario__nome_completo", "produto__nome"],
-    },
-    "sintomas": {
-        "titulo": "Sintomas",
-        "subtitulo": "Catálogo de sintomas acompanhados pelo FLORA.",
-        "grupo": USUARIA,
-        "model": Sintoma,
-        "form": SintomaForm,
-        "campos": ["nome", "descricao"],
-        "busca": ["nome", "descricao"],
-    },
-    "registros-sintomas": {
-        "titulo": "Registro de sintomas",
-        "subtitulo": "Histórico cronológico de sintomas das usuárias.",
-        "grupo": USUARIA,
-        "model": RegistroSintoma,
-        "form": RegistroSintomaForm,
-        "campos": ["usuario", "sintoma", "data_ocorrencia", "intensidade", "fase_ciclo"],
-        "busca": ["usuario__nome_completo", "sintoma__nome", "fase_ciclo"],
-    },
-    "ciclos": {
-        "titulo": "Ciclos menstruais",
-        "subtitulo": "Registro de início, fim e duração do ciclo.",
-        "grupo": USUARIA,
-        "model": CicloMenstrual,
-        "form": CicloMenstrualForm,
-        "campos": ["usuario", "data_inicio", "data_fim", "duracao"],
-        "busca": ["usuario__nome_completo", "observacoes"],
-    },
-    "exposicoes": {
-        "titulo": "Exposições",
-        "subtitulo": "Carga hormonal consolidada.",
-        "grupo": USUARIA,
-        "model": Exposicao,
-        "form": ExposicaoForm,
-        "campos": ["usuario", "carga_estrogenica", "carga_androgenica", "carga_tireoidiana", "carga_total", "data_calculo"],
-        "busca": ["usuario__nome_completo"],
-    },
-    "detalhes-exposicao": {
-        "titulo": "Detalhes da exposição",
-        "subtitulo": "Contribuição de produtos e substâncias no cálculo.",
-        "grupo": ESPECIALISTA,
-        "model": ExposicaoDetalhe,
-        "form": ExposicaoDetalheForm,
-        "campos": ["exposicao", "produto", "substancia", "valor_contribuicao"],
-        "busca": ["produto__nome", "substancia__nome", "exposicao__usuario__nome_completo"],
-    },
-    "sugestoes": {
-        "titulo": "Sugestões de troca",
-        "subtitulo": "Produtos seguros equivalentes aos produtos de risco.",
-        "grupo": ESPECIALISTA,
-        "model": SugestaoTroca,
-        "form": SugestaoTrocaForm,
-        "campos": ["produto_risco", "produto_seguro", "confianca", "especialista"],
-        "busca": ["produto_risco__nome", "produto_seguro__nome", "especialista__nome_completo"],
-    },
-    "referencias": {
-        "titulo": "Referências científicas",
-        "subtitulo": "Artigos, DOI e fontes vinculadas às substâncias.",
-        "grupo": ESPECIALISTA,
-        "model": Referencia,
-        "form": ReferenciaForm,
-        "campos": ["titulo_artigo", "autores", "ano_publicacao", "substancia"],
-        "busca": ["titulo_artigo", "autores", "substancia__nome"],
-    },
-    "alertas": {
-        "titulo": "Alertas de risco",
-        "somente_leitura": True,
-        "subtitulo": "Mensagens emitidas com base no perfil e exposição.",
-        "grupo": USUARIA,
-        "model": AlertaRisco,
-        "form": AlertaRiscoForm,
-        "campos": ["usuario", "nivel_gravidade", "mensagem_alerta", "data_emissao"],
-        "busca": ["usuario__nome_completo", "mensagem_alerta", "nivel_gravidade"],
-    },
-    "notificacoes": {
-        "titulo": "Notificações",
-        "somente_leitura": True,
-        "subtitulo": "Comunicações enviadas para usuárias.",
-        "grupo": USUARIA,
-        "model": Notificacao,
-        "form": NotificacaoForm,
-        "campos": ["usuario", "tipo_notificacao", "mensagem", "lida", "data_envio"],
-        "busca": ["usuario__nome_completo", "tipo_notificacao", "mensagem"],
-    },
+    "pessoas": entidade(
+        "Pessoas", "Administração", Pessoa, PessoaForm,
+        ["nome_completo", "email", "cpf", "tipo_usuario", "ativo"],
+        ["nome_completo", "email", "cpf"],
+    ),
+    "usuarias": entidade(
+        "Usuárias", "Administração", Usuario, UsuarioForm,
+        ["nome_completo", "email", "data_nasc", "apelido", "ativo"],
+        ["nome_completo", "email", "cpf", "apelido"],
+        filtro={"tipo_usuario": "USUARIA"},
+    ),
+    "especialistas": entidade(
+        "Especialistas", "Administração", Especialista,
+        EspecialistaForm,
+        [
+            "nome_completo",
+            "email",
+            "registro_profissional",
+            "especialidade",
+            "ativo",
+        ],
+        [
+            "nome_completo",
+            "email",
+            "registro_profissional",
+            "especialidade",
+        ],
+        filtro={"tipo_usuario": "ESPECIALISTA"},
+    ),
+    "administradores": entidade(
+        "Administradores", "Administração", Admin,
+        AdminFloraForm,
+        ["nome_completo", "email", "nivel_acesso", "ativo"],
+        ["nome_completo", "email", "nivel_acesso"],
+        filtro={"tipo_usuario": "ADMIN"},
+    ),
+    "ufs": entidade(
+        "UFs", "Administração", UF, UFForm,
+        ["nome_estado", "sigla"],
+        ["nome_estado", "sigla"],
+    ),
+    "cidades": entidade(
+        "Cidades", "Administração", Cidade, CidadeForm,
+        ["nome_cidade", "uf"],
+        ["nome_cidade", "uf__sigla"],
+    ),
+    "categorias": entidade(
+        "Categorias", "Catálogo", Categoria, CategoriaForm,
+        ["nome", "descricao"],
+        ["nome", "descricao"],
+    ),
+    "produtos": entidade(
+        "Produtos", "Catálogo", Produto, ProdutoForm,
+        ["nome", "marca", "categoria", "fabricante", "nota_flora"],
+        ["nome", "marca", "codigo_barras", "fabricante"],
+        visualizar=(ADMIN, ESPECIALISTA),
+    ),
+    "ingredientes": entidade(
+        "Ingredientes", "Catálogo", Ingrediente,
+        IngredienteForm,
+        ["nome", "funcao_quimica", "substancia"],
+        ["nome", "funcao_quimica", "substancia__nome"],
+        visualizar=(ADMIN, ESPECIALISTA),
+    ),
+    "composicoes": entidade(
+        "Composição dos produtos", "Catálogo",
+        ProdutoIngrediente, ProdutoIngredienteForm,
+        [
+            "produto",
+            "ingrediente",
+            "concentracao_estimada",
+            "unidade_concentracao",
+        ],
+        ["produto__nome", "ingrediente__nome"],
+        visualizar=(ADMIN, ESPECIALISTA),
+    ),
+    "tipos-desreguladores": entidade(
+        "Eixos hormonais", "Análise técnica",
+        TipoDesregulador, TipoDesreguladorForm,
+        ["nome", "descricao"],
+        ["nome", "descricao"],
+        visualizar=(ADMIN, ESPECIALISTA),
+        editar=(ADMIN, ESPECIALISTA),
+    ),
+    "substancias": entidade(
+        "Substâncias", "Análise técnica",
+        Substancia, SubstanciaForm,
+        ["nome", "cas_number", "nivel_risco", "tipo_desregulador"],
+        ["nome", "cas_number", "tipo_desregulador__nome"],
+        visualizar=(ADMIN, ESPECIALISTA),
+        editar=(ADMIN, ESPECIALISTA),
+    ),
+    "referencias": entidade(
+        "Referências científicas", "Análise técnica",
+        Referencia, ReferenciaForm,
+        ["titulo_artigo", "autores", "ano_publicacao", "substancia"],
+        ["titulo_artigo", "autores", "substancia__nome"],
+        visualizar=(ADMIN, ESPECIALISTA),
+        editar=(ADMIN, ESPECIALISTA),
+    ),
+    "sugestoes": entidade(
+        "Sugestões de troca", "Análise técnica",
+        SugestaoTroca, SugestaoTrocaForm,
+        ["produto_risco", "produto_seguro", "confianca", "especialista"],
+        [
+            "produto_risco__nome",
+            "produto_seguro__nome",
+            "especialista__nome_completo",
+        ],
+        visualizar=(ADMIN, ESPECIALISTA, USUARIA),
+        editar=(ADMIN, ESPECIALISTA),
+        specialist_field="especialista",
+    ),
+    "perfis-hormonais": entidade(
+        "Perfil hormonal", "Minha saúde",
+        PerfilHormonal, PerfilHormonalForm,
+        [
+            "usuario",
+            "uso_contraceptivo",
+            "condicao_hormonal",
+            "ciclo_regular",
+            "duracao_ciclo",
+            "fluxo_menstrual",
+        ],
+        ["usuario__nome_completo", "condicao_hormonal"],
+        visualizar=(ADMIN, USUARIA),
+        editar=(ADMIN, USUARIA),
+        owner_lookup="usuario",
+        owner_field="usuario",
+    ),
+    "armario": entidade(
+        "Armário virtual", "Minha saúde",
+        ArmarioItem, ArmarioItemForm,
+        ["produto", "frequencia_uso"],
+        ["usuario__nome_completo", "produto__nome"],
+        visualizar=(ADMIN, USUARIA),
+        editar=(ADMIN, USUARIA),
+        owner_lookup="usuario",
+        owner_field="usuario",
+    ),
+    "sintomas": entidade(
+        "Sintomas", "Minha saúde",
+        Sintoma, SintomaForm,
+        ["nome", "descricao"],
+        ["nome", "descricao"],
+        visualizar=(ADMIN, USUARIA),
+    ),
+    "registros-sintomas": entidade(
+        "Diário de sintomas", "Minha saúde",
+        RegistroSintoma, RegistroSintomaForm,
+        [
+            "sintoma",
+            "data_ocorrencia",
+            "intensidade",
+            "fase_ciclo",
+        ],
+        ["usuario__nome_completo", "sintoma__nome", "fase_ciclo"],
+        visualizar=(ADMIN, USUARIA),
+        editar=(ADMIN, USUARIA),
+        owner_lookup="usuario",
+        owner_field="usuario",
+    ),
+    "ciclos": entidade(
+        "Ciclos menstruais", "Minha saúde",
+        CicloMenstrual, CicloMenstrualForm,
+        ["data_inicio", "data_fim", "duracao", "observacoes"],
+        ["usuario__nome_completo", "observacoes"],
+        visualizar=(ADMIN, USUARIA),
+        editar=(ADMIN, USUARIA),
+        owner_lookup="usuario",
+        owner_field="usuario",
+    ),
+    "exposicoes": entidade(
+        "Exposições", "Acompanhamento",
+        Exposicao, None,
+        [
+            "usuario",
+            "carga_estrogenica",
+            "carga_androgenica",
+            "carga_tireoidiana",
+            "carga_total",
+            "data_calculo",
+        ],
+        ["usuario__nome_completo"],
+        visualizar=(ADMIN, ESPECIALISTA, USUARIA),
+        editar=(),
+        owner_lookup="usuario",
+    ),
+    "detalhes-exposicao": entidade(
+        "Detalhes da exposição", "Acompanhamento",
+        ExposicaoDetalhe, None,
+        ["produto", "substancia", "valor_contribuicao"],
+        [
+            "produto__nome",
+            "substancia__nome",
+            "exposicao__usuario__nome_completo",
+        ],
+        visualizar=(ADMIN, ESPECIALISTA, USUARIA),
+        editar=(),
+        owner_lookup="exposicao__usuario",
+    ),
+    "alertas": entidade(
+        "Alertas de risco", "Acompanhamento",
+        AlertaRisco, None,
+        ["nivel_gravidade", "mensagem_alerta", "data_emissao"],
+        ["usuario__nome_completo", "mensagem_alerta"],
+        visualizar=(ADMIN, USUARIA),
+        editar=(),
+        owner_lookup="usuario",
+    ),
+    "notificacoes": entidade(
+        "Notificações", "Acompanhamento",
+        Notificacao, None,
+        ["tipo_notificacao", "mensagem", "lida", "data_envio"],
+        ["usuario__nome_completo", "tipo_notificacao", "mensagem"],
+        visualizar=(ADMIN, USUARIA),
+        editar=(),
+        owner_lookup="usuario",
+    ),
 }
 
 
-def menu_context():
-    grupos = {
-        ADMIN: [],
-        USUARIA: [],
-        ESPECIALISTA: [],
-    }
-
-    for slug, config in ENTIDADES.items():
-        grupos[config["grupo"]].append({"slug": slug, "titulo": config["titulo"]})
-
-    return grupos
+def perfil_usuario(user):
+    if user.is_superuser or user.tipo_usuario == "ADMIN":
+        return ADMIN
+    if user.tipo_usuario == "ESPECIALISTA":
+        return ESPECIALISTA
+    return USUARIA
 
 
 def get_config(slug):
-    if slug not in ENTIDADES:
-        raise PermissionDenied("Página não encontrada.")
-    return ENTIDADES[slug]
+    try:
+        return ENTIDADES[slug]
+    except KeyError as exc:
+        raise Http404("Página não encontrada.") from exc
 
 
-def get_queryset(config, request):
-    qs = config["model"].objects.all()
+def pode_visualizar(config, user):
+    return perfil_usuario(user) in config["visualizar"]
 
-    if "filtro" in config:
-        qs = qs.filter(**config["filtro"])
 
-    q = request.GET.get("q", "").strip()
-    if q:
-        filtro = Q()
-        for campo in config.get("busca", []):
-            filtro |= Q(**{f"{campo}__icontains": q})
-        qs = qs.filter(filtro)
+def pode_editar(config, user):
+    return perfil_usuario(user) in config["editar"]
 
-    return qs
 
-def destino_por_usuario(user):
-    if not user.is_authenticated:
-        return "saude:entrar"
+def verificar_permissao(config, user, escrita=False):
+    permitido = (
+        pode_editar(config, user)
+        if escrita
+        else pode_visualizar(config, user)
+    )
+    if not permitido:
+        raise PermissionDenied
 
-    if user.is_superuser or user.tipo_usuario == "ADMIN":
-        return "saude:dashboard"
 
-    if user.tipo_usuario == "ESPECIALISTA":
-        return "saude:lista", {"slug": "substancias"}
+def queryset_base(config, request):
+    queryset = config["model"].objects.filter(**config["filtro"])
+    perfil = perfil_usuario(request.user)
 
-    return "saude:lista", {"slug": "armario"}
+    if perfil == USUARIA and config.get("owner_lookup"):
+        queryset = queryset.filter(
+            **{config["owner_lookup"]: request.user}
+        )
+
+    return queryset
+
+
+def menu_context(user):
+    perfil = perfil_usuario(user)
+    secoes = []
+
+    ordem = [
+        "Administração",
+        "Catálogo",
+        "Minha saúde",
+        "Análise técnica",
+        "Acompanhamento",
+    ]
+
+    for secao in ordem:
+        itens = []
+
+        for slug, config in ENTIDADES.items():
+            if config["secao"] != secao:
+                continue
+            if perfil not in config["visualizar"]:
+                continue
+
+            itens.append({
+                "slug": slug,
+                "titulo": config["titulo"],
+            })
+
+        if itens:
+            secoes.append({"titulo": secao, "itens": itens})
+
+    return secoes
+
+
+def contexto_base(request):
+    nao_lidas = 0
+
+    if perfil_usuario(request.user) == USUARIA:
+        nao_lidas = request.user.notificacoes.filter(lida=False).count()
+
+    return {
+        "menu_secoes": menu_context(request.user),
+        "perfil_atual": perfil_usuario(request.user),
+        "notificacoes_nao_lidas": nao_lidas,
+    }
+
+
+def colunas_config(config):
+    resultado = []
+
+    for nome in config["colunas"]:
+        field = config["model"]._meta.get_field(nome)
+        resultado.append({
+            "nome": nome,
+            "rotulo": field.verbose_name,
+        })
+
+    return resultado
+
+
+def campos_detalhe(obj):
+    ignorados = {"password"}
+    resultado = []
+
+    for field in obj._meta.fields:
+        if field.name in ignorados:
+            continue
+
+        resultado.append({
+            "nome": field.name,
+            "rotulo": field.verbose_name,
+        })
+
+    return resultado
+
+
+def preparar_form(form, config, request):
+    perfil = perfil_usuario(request.user)
+
+    if perfil == USUARIA and config.get("owner_field"):
+        form.fields.pop(config["owner_field"], None)
+
+    if perfil == ESPECIALISTA and config.get("specialist_field"):
+        form.fields.pop(config["specialist_field"], None)
+
+    return form
+
+
+def salvar_form(form, config, request):
+    objeto = form.save(commit=False)
+    perfil = perfil_usuario(request.user)
+
+    if perfil == USUARIA and config.get("owner_field"):
+        setattr(objeto, config["owner_field"], request.user)
+
+    if perfil == ESPECIALISTA and config.get("specialist_field"):
+        setattr(objeto, config["specialist_field"], request.user)
+
+    objeto.save()
+    form.save_m2m()
+    return objeto
 
 
 def entrar(request):
     if request.user.is_authenticated:
-        destino = destino_por_usuario(request.user)
-        if isinstance(destino, tuple):
-            return redirect(destino[0], **destino[1])
-        return redirect(destino)
+        return redirect("saude:dashboard")
 
     form = LoginForm(request.POST or None)
 
     if request.method == "POST" and form.is_valid():
         user = authenticate(
             request,
-            username=form.cleaned_data["email"],
+            username=form.cleaned_data["email"].lower(),
             password=form.cleaned_data["senha"],
         )
 
-        if user:
+        if user is not None and user.is_active:
             login(request, user)
-            destino = destino_por_usuario(user)
-            if isinstance(destino, tuple):
-                return redirect(destino[0], **destino[1])
-            return redirect(destino)
+            return redirect("saude:dashboard")
 
         messages.error(request, "E-mail ou senha inválidos.")
 
@@ -321,147 +492,311 @@ def cadastrar(request):
     if request.user.is_authenticated:
         return redirect("saude:dashboard")
 
-    form = CadastroForm(request.POST or None, request.FILES or None)
+    form = CadastroForm(
+        request.POST or None,
+        request.FILES or None,
+    )
 
     if request.method == "POST" and form.is_valid():
         user = form.save()
         login(request, user)
-        destino = destino_por_usuario(user)
-        if isinstance(destino, tuple):
-            return redirect(destino[0], **destino[1])
-        return redirect(destino)
+
+        if user.tipo_usuario == "USUARIA":
+            PerfilHormonal.objects.get_or_create(usuario=user)
+
+        messages.success(request, "Sua conta foi criada.")
+        return redirect("saude:dashboard")
 
     return render(request, "cadastrar.html", {"form": form})
 
 
+@login_required(login_url="saude:entrar")
 def sair(request):
     logout(request)
     return redirect("saude:entrar")
 
+
 @login_required(login_url="saude:entrar")
 def dashboard(request):
-    total_usuarias = Usuario.objects.filter(tipo_usuario="USUARIA").count()
-    total_produtos = Produto.objects.count()
-    total_substancias = Substancia.objects.count()
-    total_alertas = AlertaRisco.objects.count()
-    exposicao = Exposicao.objects.order_by("-data_calculo").first()
+    perfil = perfil_usuario(request.user)
+    contexto = contexto_base(request)
 
-    radar_valores = [0, 0, 0]
-    if exposicao:
-        radar_valores = [
-            float(exposicao.carga_estrogenica or 0),
-            float(exposicao.carga_androgenica or 0),
-            float(exposicao.carga_tireoidiana or 0),
+    if perfil == USUARIA:
+        exposicao = request.user.historico_exposicoes.first()
+        metricas = [
+            {
+                "rotulo": "Produtos no armário",
+                "valor": request.user.armario.count(),
+                "url": reverse("saude:lista", args=["armario"]),
+            },
+            {
+                "rotulo": "Sintomas registrados",
+                "valor": request.user.diario_sintomas.count(),
+                "url": reverse(
+                    "saude:lista",
+                    args=["registros-sintomas"],
+                ),
+            },
+            {
+                "rotulo": "Ciclos registrados",
+                "valor": request.user.ciclos.count(),
+                "url": reverse("saude:lista", args=["ciclos"]),
+            },
+            {
+                "rotulo": "Alertas",
+                "valor": request.user.alertas_risco.count(),
+                "url": reverse("saude:lista", args=["alertas"]),
+            },
         ]
+        atividades = request.user.notificacoes.all()[:4]
 
-    contexto = {
-        "menu": menu_context(),
-        "total_usuarias": total_usuarias,
-        "total_produtos": total_produtos,
-        "total_substancias": total_substancias,
-        "total_alertas": total_alertas,
+    elif perfil == ESPECIALISTA:
+        exposicao = Exposicao.objects.first()
+        metricas = [
+            {
+                "rotulo": "Substâncias",
+                "valor": Substancia.objects.count(),
+                "url": reverse("saude:lista", args=["substancias"]),
+            },
+            {
+                "rotulo": "Referências",
+                "valor": Referencia.objects.count(),
+                "url": reverse("saude:lista", args=["referencias"]),
+            },
+            {
+                "rotulo": "Sugestões",
+                "valor": SugestaoTroca.objects.count(),
+                "url": reverse("saude:lista", args=["sugestoes"]),
+            },
+            {
+                "rotulo": "Produtos",
+                "valor": Produto.objects.count(),
+                "url": reverse("saude:lista", args=["produtos"]),
+            },
+        ]
+        atividades = SugestaoTroca.objects.select_related(
+            "produto_risco",
+            "produto_seguro",
+        )[:4]
+
+    else:
+        exposicao = Exposicao.objects.first()
+        metricas = [
+            {
+                "rotulo": "Usuárias",
+                "valor": Pessoa.objects.filter(
+                    tipo_usuario="USUARIA"
+                ).count(),
+                "url": reverse("saude:lista", args=["usuarias"]),
+            },
+            {
+                "rotulo": "Especialistas",
+                "valor": Pessoa.objects.filter(
+                    tipo_usuario="ESPECIALISTA"
+                ).count(),
+                "url": reverse(
+                    "saude:lista",
+                    args=["especialistas"],
+                ),
+            },
+            {
+                "rotulo": "Produtos",
+                "valor": Produto.objects.count(),
+                "url": reverse("saude:lista", args=["produtos"]),
+            },
+            {
+                "rotulo": "Alertas",
+                "valor": AlertaRisco.objects.count(),
+                "url": reverse("saude:lista", args=["alertas"]),
+            },
+        ]
+        atividades = AlertaRisco.objects.select_related("usuario")[:4]
+
+    contexto.update({
         "exposicao": exposicao,
-        "radar_valores": radar_valores,
-    }
+        "metricas": metricas,
+        "atividades": atividades,
+        "radar_valores": [
+            float(exposicao.carga_estrogenica or 0) if exposicao else 0,
+            float(exposicao.carga_androgenica or 0) if exposicao else 0,
+            float(exposicao.carga_tireoidiana or 0) if exposicao else 0,
+        ],
+    })
+
     return render(request, "dashboard.html", contexto)
 
 
+@login_required(login_url="saude:entrar")
 def lista(request, slug):
     config = get_config(slug)
-    objetos = get_queryset(config, request)
+    verificar_permissao(config, request.user)
 
-    contexto = {
-        "menu": menu_context(),
-        "slug": slug,
+    queryset = queryset_base(config, request)
+    termo = request.GET.get("q", "").strip()
+
+    if termo:
+        filtro = Q()
+        for campo in config["busca"]:
+            filtro |= Q(**{f"{campo}__icontains": termo})
+        queryset = queryset.filter(filtro)
+
+    contexto = contexto_base(request)
+    contexto.update({
         "config": config,
-        "objetos": objetos,
-        "campos": config["campos"],
-        "q": request.GET.get("q", ""),
-    }
+        "slug": slug,
+        "objetos": queryset,
+        "colunas": colunas_config(config),
+        "termo": termo,
+        "pode_editar": pode_editar(config, request.user),
+    })
+
     return render(request, "lista.html", contexto)
 
 
+@login_required(login_url="saude:entrar")
 def detalhe(request, slug, pk):
     config = get_config(slug)
-    obj = get_object_or_404(config["model"], pk=pk)
+    verificar_permissao(config, request.user)
 
-    contexto = {
-        "menu": menu_context(),
-        "slug": slug,
+    objeto = get_object_or_404(
+        queryset_base(config, request),
+        pk=pk,
+    )
+
+    contexto = contexto_base(request)
+    contexto.update({
         "config": config,
-        "obj": obj,
-        "campos": [field.name for field in obj._meta.fields],
-    }
+        "slug": slug,
+        "objeto": objeto,
+        "campos": campos_detalhe(objeto),
+        "pode_editar": pode_editar(config, request.user),
+    })
+
     return render(request, "detalhe.html", contexto)
 
 
+@login_required(login_url="saude:entrar")
 def criar(request, slug):
     config = get_config(slug)
-    form_class = config["form"]
+    verificar_permissao(config, request.user, escrita=True)
 
-    if config.get("somente_leitura"):
-        return HttpResponseForbidden("Este registro é gerado automaticamente pelo sistema.")
+    if config["form"] is None:
+        raise PermissionDenied
 
-    if request.method == "POST":
-        form = form_class(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Registro criado com sucesso.")
-            return redirect("saude:lista", slug=slug)
-    else:
-        form = form_class()
-        
+    if (
+        slug == "perfis-hormonais"
+        and perfil_usuario(request.user) == USUARIA
+    ):
+        perfil = PerfilHormonal.objects.filter(
+            usuario=request.user
+        ).first()
 
-    return render(request, "formulario.html", {
-        "menu": menu_context(),
-        "slug": slug,
-        "config": config,
-        "form": form,
-        "modo": "Novo registro",
-    })
+        if perfil:
+            return redirect(
+                "saude:editar",
+                slug=slug,
+                pk=perfil.pk,
+            )
 
+    form = config["form"](
+        request.POST or None,
+        request.FILES or None,
+    )
+    preparar_form(form, config, request)
 
-def editar(request, slug, pk):
-    config = get_config(slug)
-    obj = get_object_or_404(config["model"], pk=pk)
-    form_class = config["form"]
-
-    if config.get("somente_leitura"):
-        return HttpResponseForbidden("Este registro é gerado automaticamente pelo sistema.")
-
-    if request.method == "POST":
-        form = form_class(request.POST, request.FILES, instance=obj)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Registro atualizado com sucesso.")
-            return redirect("saude:lista", slug=slug)
-    else:
-        form = form_class(instance=obj)
-
-    return render(request, "formulario.html", {
-        "menu": menu_context(),
-        "slug": slug,
-        "config": config,
-        "form": form,
-        "modo": "Editar registro",
-    })
-
-
-def excluir(request, slug, pk):
-    config = get_config(slug)
-    obj = get_object_or_404(config["model"], pk=pk)
-
-    if config.get("somente_leitura"):
-        return HttpResponseForbidden("Este registro é gerado automaticamente pelo sistema.")
-
-    if request.method == "POST":
-        obj.delete()
-        messages.success(request, "Registro excluído com sucesso.")
+    if request.method == "POST" and form.is_valid():
+        salvar_form(form, config, request)
+        messages.success(request, "Registro salvo com sucesso.")
         return redirect("saude:lista", slug=slug)
 
-    return render(request, "confirmar_exclusao.html", {
-        "menu": menu_context(),
-        "slug": slug,
+    contexto = contexto_base(request)
+    contexto.update({
         "config": config,
-        "obj": obj,
+        "slug": slug,
+        "form": form,
+        "titulo_form": "Novo registro",
     })
+
+    return render(request, "formulario.html", contexto)
+
+
+@login_required(login_url="saude:entrar")
+def editar(request, slug, pk):
+    config = get_config(slug)
+    verificar_permissao(config, request.user, escrita=True)
+
+    if config["form"] is None:
+        raise PermissionDenied
+
+    objeto = get_object_or_404(
+        queryset_base(config, request),
+        pk=pk,
+    )
+
+    form = config["form"](
+        request.POST or None,
+        request.FILES or None,
+        instance=objeto,
+    )
+    preparar_form(form, config, request)
+
+    if request.method == "POST" and form.is_valid():
+        salvar_form(form, config, request)
+        messages.success(request, "Alterações salvas.")
+        return redirect("saude:lista", slug=slug)
+
+    contexto = contexto_base(request)
+    contexto.update({
+        "config": config,
+        "slug": slug,
+        "form": form,
+        "titulo_form": "Editar registro",
+    })
+
+    return render(request, "formulario.html", contexto)
+
+
+@login_required(login_url="saude:entrar")
+def excluir(request, slug, pk):
+    config = get_config(slug)
+    verificar_permissao(config, request.user, escrita=True)
+
+    objeto = get_object_or_404(
+        queryset_base(config, request),
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        objeto.delete()
+        messages.success(request, "Registro excluído.")
+        return redirect("saude:lista", slug=slug)
+
+    contexto = contexto_base(request)
+    contexto.update({
+        "config": config,
+        "slug": slug,
+        "objeto": objeto,
+    })
+
+    return render(request, "confirmar_exclusao.html", contexto)
+
+
+@require_POST
+@login_required(login_url="saude:entrar")
+def marcar_notificacao(request, pk):
+    perfil = perfil_usuario(request.user)
+
+    if perfil == ADMIN:
+        notificacao = get_object_or_404(Notificacao, pk=pk)
+    elif perfil == USUARIA:
+        notificacao = get_object_or_404(
+            Notificacao,
+            pk=pk,
+            usuario=request.user,
+        )
+    else:
+        raise PermissionDenied
+
+    notificacao.lida = True
+    notificacao.save(update_fields=["lida"])
+    return redirect("saude:lista", slug="notificacoes")

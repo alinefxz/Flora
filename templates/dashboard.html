@@ -1,103 +1,96 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard | FLORA{% endblock %}
-{% block page_name %}Dashboard{% endblock %}
+{% block title %}Visão geral | FLORA{% endblock %}
 
 {% block content %}
-<section class="home-hero">
+<header class="page-heading">
     <div>
-        <p class="eyebrow">Mapa hormonal pessoal</p>
-        <h1>Um jeito mais humano de enxergar exposição, rotina e sintomas.</h1>
+        <p class="overline">Visão geral</p>
+        <h1>Olá, {{ user.apelido|default:user.nome_completo }}.</h1>
         <p>
-            O FLORA conecta produtos, substâncias, ciclos e sinais do corpo para transformar dados químicos
-            em acompanhamento claro e acolhedor.
+            Este é o seu espaço de acompanhamento no FLORA.
         </p>
     </div>
+</header>
 
-    <div class="hero-bloom">
-        <span>carga atual</span>
-        <strong>{% if exposicao %}{{ exposicao.carga_total|floatformat:2 }}{% else %}0.00{% endif %}</strong>
-        <small>{% if exposicao %}{{ exposicao.usuario }}{% else %}sem cálculo ainda{% endif %}</small>
-    </div>
+<section class="metrics">
+    {% for metrica in metricas %}
+        <a href="{{ metrica.url }}" class="metric">
+            <span>{{ metrica.rotulo }}</span>
+            <strong>{{ metrica.valor }}</strong>
+        </a>
+    {% endfor %}
 </section>
 
-<section class="petal-grid">
-    <article class="petal-card">
-        <span>Usuárias</span>
-        <strong>{{ total_usuarias }}</strong>
-    </article>
-    <article class="petal-card">
-        <span>Produtos</span>
-        <strong>{{ total_produtos }}</strong>
-    </article>
-    <article class="petal-card">
-        <span>Substâncias</span>
-        <strong>{{ total_substancias }}</strong>
-    </article>
-    <article class="petal-card">
-        <span>Alertas</span>
-        <strong>{{ total_alertas }}</strong>
-    </article>
-</section>
-
-<section class="dashboard-grid">
-    <article class="soft-panel">
-        <div class="section-heading">
+<section class="dashboard-layout">
+    <article class="content-panel">
+        <header class="panel-heading">
             <div>
-                <p class="eyebrow">Exposição</p>
-                <h2>Radar hormonal</h2>
+                <p class="overline">Exposição hormonal</p>
+                <h2>Mapa atual</h2>
             </div>
-        </div>
 
-        <div class="chart-wrap">
+            {% if exposicao %}
+                <strong class="total-load">
+                    {{ exposicao.carga_total|floatformat:2 }}
+                </strong>
+            {% endif %}
+        </header>
+
+        <div class="chart-area">
             <canvas id="radarChart"></canvas>
         </div>
     </article>
 
-    <article class="soft-panel">
-        <p class="eyebrow">Atalhos</p>
-        <h2>Rotina FLORA</h2>
+    <article class="content-panel">
+        <header class="panel-heading">
+            <div>
+                <p class="overline">Atualizações</p>
+                <h2>Atividade recente</h2>
+            </div>
+        </header>
 
-        <div class="garden-links">
-            {% if user.is_superuser or user.tipo_usuario == "ADMIN" %}
-                <a href="{% url 'saude:lista' 'usuarias' %}">Usuárias</a>
-                <a href="{% url 'saude:lista' 'produtos' %}">Produtos</a>
-                <a href="{% url 'saude:lista' 'substancias' %}">Substâncias</a>
-            {% endif %}
-
-            {% if user.tipo_usuario == "USUARIA" or user.is_superuser %}
-                <a href="{% url 'saude:lista' 'armario' %}">Armário virtual</a>
-                <a href="{% url 'saude:lista' 'ciclos' %}">Ciclos</a>
-                <a href="{% url 'saude:lista' 'registros-sintomas' %}">Sintomas</a>
-            {% endif %}
-
-            {% if user.tipo_usuario == "ESPECIALISTA" or user.is_superuser %}
-                <a href="{% url 'saude:lista' 'referencias' %}">Referências</a>
-                <a href="{% url 'saude:lista' 'sugestoes' %}">Sugestões</a>
-                <a href="{% url 'saude:lista' 'detalhes-exposicao' %}">Detalhes da exposição</a>
-            {% endif %}
+        <div class="activity-list">
+            {% for item in atividades %}
+                <div class="activity-item">
+                    <strong>{{ item }}</strong>
+                </div>
+            {% empty %}
+                <p class="empty-text">
+                    Ainda não existem atualizações para mostrar.
+                </p>
+            {% endfor %}
         </div>
     </article>
 </section>
 
-{{ radar_valores|json_script:"radar-values" }}
+{{ radar_valores|json_script:"radar-data" }}
 
 <script>
-    const radarValues = JSON.parse(document.getElementById("radar-values").textContent);
-    const ctx = document.getElementById("radarChart");
+document.addEventListener("DOMContentLoaded", function () {
+    const canvas = document.getElementById("radarChart");
+    const data = JSON.parse(
+        document.getElementById("radar-data").textContent
+    );
 
-    new Chart(ctx, {
+    if (!window.Chart) return;
+
+    new Chart(canvas, {
         type: "radar",
         data: {
-            labels: ["Estrogênica", "Androgênica", "Tireoidiana"],
+            labels: [
+                "Estrogênica",
+                "Androgênica",
+                "Tireoidiana"
+            ],
             datasets: [{
                 label: "Carga hormonal",
-                data: radarValues,
-                backgroundColor: "rgba(216, 132, 143, .20)",
-                borderColor: "#2f4632",
+                data: data,
+                backgroundColor: "rgba(211, 150, 140, .25)",
+                borderColor: "#105666",
                 borderWidth: 2,
-                pointBackgroundColor: "#d8848f",
-                pointBorderColor: "#2f4632",
+                pointBackgroundColor: "#D3968C",
+                pointBorderColor: "#0A3323",
                 pointRadius: 4
             }]
         },
@@ -107,20 +100,30 @@
             scales: {
                 r: {
                     beginAtZero: true,
-                    grid: { color: "rgba(47, 70, 50, .14)" },
-                    angleLines: { color: "rgba(47, 70, 50, .18)" },
+                    grid: {
+                        color: "rgba(10, 51, 35, .14)"
+                    },
+                    angleLines: {
+                        color: "rgba(10, 51, 35, .14)"
+                    },
                     pointLabels: {
-                        color: "#2f4632",
-                        font: { size: 13, weight: "600" }
+                        color: "#0A3323",
+                        font: {
+                            size: 13,
+                            weight: "600"
+                        }
                     }
                 }
             },
             plugins: {
                 legend: {
-                    labels: { color: "#2f4632" }
+                    labels: {
+                        color: "#0A3323"
+                    }
                 }
             }
         }
     });
+});
 </script>
 {% endblock %}

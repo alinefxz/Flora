@@ -1,14 +1,18 @@
+from datetime import date, datetime
 from django import template
+from django.db.models.fields.files import FieldFile
 
 register = template.Library()
 
 
 @register.filter
 def get_attr(obj, attr):
-    value = obj
+    display = getattr(obj, f"get_{attr}_display", None)
 
-    for part in attr.split("."):
-        value = getattr(value, part, "")
+    if callable(display):
+        return display()
+
+    value = getattr(obj, attr, None)
 
     if callable(value):
         value = value()
@@ -19,35 +23,21 @@ def get_attr(obj, attr):
     if value is False:
         return "Não"
 
-    if value is None or value == "":
-        return "-"
+    if value in (None, ""):
+        return "—"
+
+    if isinstance(value, datetime):
+        return value.strftime("%d/%m/%Y às %H:%M")
+
+    if isinstance(value, date):
+        return value.strftime("%d/%m/%Y")
+
+    if isinstance(value, FieldFile):
+        return value.name or "—"
 
     return value
 
 
 @register.filter
-def labelize(value):
-    labels = {
-        "cpf": "CPF",
-        "uf": "UF",
-        "id": "ID",
-        "cas_number": "CAS",
-        "data_nasc": "Data de nascimento",
-        "data_inicio": "Data de início",
-        "data_fim": "Data de fim",
-        "data_ocorrencia": "Data da ocorrência",
-        "data_calculo": "Data do cálculo",
-        "data_emissao": "Data de emissão",
-        "data_envio": "Data de envio",
-        "carga_estrogenica": "Carga estrogênica",
-        "carga_androgenica": "Carga androgênica",
-        "carga_tireoidiana": "Carga tireoidiana",
-        "carga_total": "Carga total",
-        "nota_flora": "Nota FLORA",
-        "tipo_usuario": "Tipo de usuário",
-    }
-
-    if value in labels:
-        return labels[value]
-
-    return str(value).replace("_", " ").capitalize()
+def widget_type(field):
+    return field.field.widget.__class__.__name__.lower()

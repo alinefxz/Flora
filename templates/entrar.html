@@ -5,48 +5,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Entrar | FLORA</title>
+
     <link rel="icon" href="{% static 'logoF.png' %}">
-    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
 </head>
-<body>
-<header class="auth-header">
-    <img src="{% static 'logoNome.png' %}" alt="Flora">
-</header>
+<body class="auth-page">
+    <header class="auth-topbar">
+        <div class="wordmark-crop">
+            <img src="{% static 'logoNome.png' %}" alt="Flora">
+        </div>
+    </header>
 
-<main class="auth-layout">
-    <section class="auth-intro">
-        <span>Seu mapa hormonal pessoal</span>
-        <h1>Observe sua rotina com mais clareza.</h1>
-        <p>Produtos, ciclos e sintomas reunidos em um acompanhamento cuidadoso.</p>
-    </section>
+    <main class="login-layout">
+        <section class="login-intro">
+            <p class="overline">Mapa hormonal pessoal</p>
+            <h1>Entenda melhor o que faz parte da sua rotina.</h1>
+            <p>
+                Produtos, exposição química, sintomas e ciclos reunidos
+                de maneira simples e cuidadosa.
+            </p>
+        </section>
 
-    <section class="auth-form">
-        <p class="eyebrow">Bem-vinda de volta</p>
-        <h2>Entre na sua conta</h2>
+        <section class="login-form">
+            <div class="form-heading">
+                <p class="overline">Acesso</p>
+                <h2>Entre na sua conta</h2>
+                <p>Use o e-mail informado no cadastro.</p>
+            </div>
 
-        {% for message in messages %}
-            <div class="auth-message">{{ message }}</div>
-        {% endfor %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="form-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
 
-        <form method="post">
-            {% csrf_token %}
+            <form method="post">
+                {% csrf_token %}
 
-            <label for="{{ form.email.id_for_label }}">E-mail</label>
-            {{ form.email }}
-            {{ form.email.errors }}
+                <div class="field">
+                    <label for="{{ form.email.id_for_label }}">E-mail</label>
+                    {{ form.email }}
+                    {{ form.email.errors }}
+                </div>
 
-            <label for="{{ form.senha.id_for_label }}">Senha</label>
-            {{ form.senha }}
-            {{ form.senha.errors }}
+                <div class="field">
+                    <label for="{{ form.senha.id_for_label }}">Senha</label>
+                    {{ form.senha }}
+                    {{ form.senha.errors }}
+                </div>
 
-            <button type="submit">Entrar</button>
-        </form>
+                <button type="submit" class="primary-button">
+                    Entrar
+                </button>
+            </form>
 
-        <p class="auth-switch">
-            Ainda não possui uma conta?
-            <a href="{% url 'saude:cadastrar' %}">Cadastre-se</a>
-        </p>
-    </section>
-</main>
+            <p class="auth-switch">
+                Ainda não possui uma conta?
+                <a href="{% url 'saude:cadastrar' %}">Criar cadastro</a>
+            </p>
+        </section>
+    </main>
 </body>
 </html>

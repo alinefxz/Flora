@@ -1,0 +1,243 @@
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    min-height: 72px;
+    padding: 8px 28px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(247, 244, 213, 0.94);
+    backdrop-filter: blur(14px);
+}
+
+.menu-button {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.menu-button span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    margin: 3px 0;
+    background: var(--dark-green);
+}
+
+.topbar-brand {
+    justify-self: center;
+}
+
+.wordmark-crop {
+    position: relative;
+    width: 145px;
+    height: 54px;
+    overflow: hidden;
+}
+
+.wordmark-crop img {
+    position: absolute;
+    top: -44px;
+    left: 0;
+    width: 145px;
+    height: 145px;
+    object-fit: cover;
+    mix-blend-mode: multiply;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 0.88rem;
+}
+
+.notification-link {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.notification-link span {
+    min-width: 20px;
+    padding: 2px 6px;
+    border-radius: 20px;
+    color: var(--white);
+    background: var(--rosy);
+    text-align: center;
+}
+
+.user-name {
+    color: var(--dark-green);
+    font-weight: 700;
+}
+
+.drawer {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 50;
+    display: flex;
+    width: min(330px, 88vw);
+    padding: 20px;
+    flex-direction: column;
+    border-right: 1px solid var(--line);
+    background: var(--white);
+    box-shadow: var(--shadow);
+    transform: translateX(-105%);
+    transition: transform 220ms ease;
+}
+
+.menu-open .drawer {
+    transform: translateX(0);
+}
+
+.menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: none;
+    border: 0;
+    background: rgba(10, 51, 35, 0.38);
+}
+
+.menu-open .menu-overlay {
+    display: block;
+}
+
+.drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.icon-button {
+    width: 38px;
+    height: 38px;
+    border: 0;
+    color: var(--dark-green);
+    background: transparent;
+    font-size: 1.7rem;
+    cursor: pointer;
+}
+
+.drawer-nav {
+    margin-top: 24px;
+    overflow-y: auto;
+}
+
+.drawer-link {
+    display: block;
+    padding: 9px 10px;
+    border-radius: 5px;
+    color: var(--dark-green);
+    font-size: 0.93rem;
+}
+
+.drawer-link:hover {
+    background: var(--soft-green);
+}
+
+.menu-section {
+    margin-top: 22px;
+}
+
+.menu-section h2 {
+    margin: 0 10px 7px;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.drawer-user {
+    display: grid;
+    gap: 4px;
+    margin-top: auto;
+    padding: 16px 10px 4px;
+    border-top: 1px solid var(--line);
+}
+
+.drawer-user span {
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.drawer-user a {
+    margin-top: 8px;
+    font-weight: 700;
+}
+
+.page-shell {
+    width: min(1240px, calc(100% - 40px));
+    margin: 0 auto;
+    padding: 42px 0 70px;
+}
+
+.page-heading {
+    margin-bottom: 28px;
+}
+
+.page-heading h1 {
+    margin-bottom: 8px;
+    font-size: clamp(2rem, 4vw, 3.3rem);
+}
+
+.page-heading p:last-child {
+    color: var(--muted);
+}
+
+.page-heading-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+
+.metric {
+    display: grid;
+    gap: 8px;
+    padding: 22px;
+    border-right: 1px solid var(--line);
+}
+
+.metric:last-child {
+    border-right: 0;
+}
+
+.metric span {
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.metric strong {
+    color: var(--dark-green);
+    font-family: Georgia, serif;
+    font-size: 2rem;
+    font-weight: 400;
+}
+
+.dashboard-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.6fr);
+    gap: 22px;
+    margin-top: 28px;
+}
+
+.chart-area {
+    height: 370px;
+}

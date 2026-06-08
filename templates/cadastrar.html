@@ -4,97 +4,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Cadastro | FLORA</title>
+    <title>Criar conta | FLORA</title>
+
     <link rel="icon" href="{% static 'logoF.png' %}">
-    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <script src="{% static 'js/cadastro.js' %}" defer></script>
 </head>
-<body>
-<header class="auth-header">
-    <img src="{% static 'logoNome.png' %}" alt="Flora">
-</header>
-
-<main class="signup-layout">
-    <section class="signup-heading">
-        <span>Cadastro FLORA</span>
-        <h1>Comece seu acompanhamento.</h1>
-        <p>Escolha o perfil correspondente. Administradores não podem ser criados por esta página.</p>
-    </section>
-
-    <form method="post" enctype="multipart/form-data" class="signup-form">
-        {% csrf_token %}
-        {{ form.non_field_errors }}
-
-        <fieldset>
-            <legend>Como você usará o FLORA?</legend>
-            <div class="profile-options">{{ form.tipo_usuario }}</div>
-            {{ form.tipo_usuario.errors }}
-        </fieldset>
-
-        <fieldset>
-            <legend>Dados pessoais</legend>
-            <div class="field-grid">
-                <div><label>Nome completo</label>{{ form.nome_completo }}{{ form.nome_completo.errors }}</div>
-                <div><label>E-mail</label>{{ form.email }}{{ form.email.errors }}</div>
-                <div><label>CPF</label>{{ form.cpf }}{{ form.cpf.errors }}</div>
-                <div><label>Data de nascimento</label>{{ form.data_nasc }}{{ form.data_nasc.errors }}</div>
-                <div><label>Cidade</label>{{ form.cidade }}{{ form.cidade.errors }}</div>
-            </div>
-        </fieldset>
-
-        <fieldset id="usuario-fields">
-            <legend>Perfil de usuária</legend>
-            <div class="field-grid">
-                <div><label>Apelido</label>{{ form.apelido }}</div>
-                <div><label>Foto de perfil</label>{{ form.foto_perfil }}</div>
-            </div>
-        </fieldset>
-
-        <fieldset id="especialista-fields" hidden>
-            <legend>Dados profissionais</legend>
-            <div class="field-grid">
-                <div><label>Registro profissional</label>{{ form.registro_profissional }}</div>
-                <div><label>Especialidade</label>{{ form.especialidade }}</div>
-                <div class="field-wide"><label>Biografia</label>{{ form.biografia }}</div>
-            </div>
-            <small>Informe CRM, CRF, CRQ ou outro registro profissional válido.</small>
-        </fieldset>
-
-        <fieldset>
-            <legend>Segurança</legend>
-            <div class="field-grid">
-                <div><label>Senha</label>{{ form.senha }}{{ form.senha.errors }}</div>
-                <div><label>Confirmar senha</label>{{ form.confirmar_senha }}{{ form.confirmar_senha.errors }}</div>
-            </div>
-        </fieldset>
-
-        <div class="signup-actions">
-            <button type="submit">Criar conta</button>
-            <a href="{% url 'saude:entrar' %}">Já tenho conta</a>
+<body class="auth-page">
+    <header class="auth-topbar">
+        <div class="wordmark-crop">
+            <img src="{% static 'logoNome.png' %}" alt="Flora">
         </div>
-    </form>
-</main>
 
-<script>
-const radios = document.querySelectorAll('[name="tipo_usuario"]');
-const usuario = document.querySelector('#usuario-fields');
-const especialista = document.querySelector('#especialista-fields');
+        <a href="{% url 'saude:entrar' %}">Já tenho conta</a>
+    </header>
 
-function atualizarPerfil() {
-    const tipo = document.querySelector('[name="tipo_usuario"]:checked')?.value;
-    const profissional = tipo === 'ESPECIALISTA';
+    <main class="signup-shell">
+        <header class="signup-heading">
+            <p class="overline">Novo perfil</p>
+            <h1>Crie sua conta FLORA.</h1>
+            <p>
+                O formulário se adapta ao perfil escolhido. Contas
+                administrativas não podem ser criadas aqui.
+            </p>
+        </header>
 
-    especialista.hidden = !profissional;
-    usuario.hidden = profissional;
+        <form method="post" enctype="multipart/form-data"
+              class="signup-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
 
-    especialista.querySelectorAll('input, textarea, select')
-        .forEach(campo => campo.disabled = !profissional);
+            <fieldset class="form-section">
+                <legend>Como você utilizará o FLORA?</legend>
+                <div class="profile-choice">
+                    {{ form.tipo_usuario }}
+                </div>
+                {{ form.tipo_usuario.errors }}
+            </fieldset>
 
-    usuario.querySelectorAll('input, textarea, select')
-        .forEach(campo => campo.disabled = profissional);
-}
+            <fieldset class="form-section">
+                <legend>Informações pessoais</legend>
 
-radios.forEach(radio => radio.addEventListener('change', atualizarPerfil));
-atualizarPerfil();
-</script>
+                <div class="form-grid">
+                    <div class="field field-wide">
+                        <label for="{{ form.nome_completo.id_for_label }}">
+                            Nome completo
+                        </label>
+                        {{ form.nome_completo }}
+                        {{ form.nome_completo.errors }}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.email.id_for_label }}">
+                            E-mail
+                        </label>
+                        {{ form.email }}
+                        {{ form.email.errors }}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.cpf.id_for_label }}">CPF</label>
+                        {{ form.cpf }}
+                        {{ form.cpf.errors }}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.data_nasc.id_for_label }}">
+                            Data de nascimento
+                        </label>
+                        {{ form.data_nasc }}
+                        {{ form.data_nasc.errors }}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.cidade.id_for_label }}">
+                            Cidade
+                        </label>
+                        {{ form.cidade }}
+                        {{ form.cidade.errors }}
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="form-section" data-user-fields>
+                <legend>Seu perfil</legend>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="{{ form.apelido.id_for_label }}">
+                            Como prefere ser chamada?
+                        </label>
+                        {{ form.apelido }}
+                        {{ form.apelido.errors }}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.foto_perfil.id_for_label }}">
+                            Foto de perfil
+                        </label>
+                        {{ form.foto_perfil }}
+                        {{ form.foto_perfil.errors }}
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="form-section" data-specialist-fields hidden>
+                <legend>Informações profissionais</legend>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="{{ form.conselho.id_for_label }}">
+                            Conselho
+                        </label>
+                        {{ form.conselho }}
+                        {{ form.conselho.errors }}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.numero_registro.id_for_label }}">
+                            Número e UF
+                        </label>
+                        {{ form.numero_registro }}
+                        {{ form.numero_registro.errors }}
+                    </div>
+
+                    <div class="field field-wide">
+                        <label for="{{ form.especialidade.id_for_label }}">
+                            Especialidade
+                        </label>
+                        {{ form.especialidade }}
+                        {{ form.especialidade.errors }}
+                    </div>
+
+                    <div class="field field-wide">
+                        <label for="{{ form.biografia.id_for_label }}">
+                            Biografia profissional
+                        </label>
+                        {{ form.biografia }}
+                        {{ form.biografia.errors }}
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="form-section">
+                <legend>Segurança</legend>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="{{ form.senha.id_for_label }}">
+                            Senha
+                        </label>
+                        {{ form.senha }}
+                        {{ form.senha.errors }}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.confirmar_senha.id_for_label }}">
+                            Confirmar senha
+                        </label>
+                        {{ form.confirmar_senha }}
+                        {{ form.confirmar_senha.errors }}
+                    </div>
+                </div>
+            </fieldset>
+
+            <footer class="signup-actions">
+                <a href="{% url 'saude:entrar' %}">Cancelar</a>
+                <button type="submit" class="primary-button">
+                    Criar conta
+                </button>
+            </footer>
+        </form>
+    </main>
 </body>
 </html>

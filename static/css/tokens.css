@@ -1,0 +1,72 @@
+:root {
+    --dark-green: #0a3323;
+    --moss-green: #839958;
+    --beige: #f7f4d5;
+    --rosy: #d3968c;
+    --water: #105666;
+
+    --white: #fffef4;
+    --ink: #14271e;
+    --muted: #657169;
+    --line: rgba(10, 51, 35, 0.15);
+    --soft-green: rgba(131, 153, 88, 0.13);
+    --soft-rose: rgba(211, 150, 140, 0.17);
+    --shadow: 0 18px 45px rgba(10, 51, 35, 0.09);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    color-scheme: light;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--ink);
+    background: var(--beige);
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button,
+a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+a {
+    color: var(--water);
+    text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+p {
+    margin-top: 0;
+}
+
+h1,
+h2,
+h3 {
+    color: var(--dark-green);
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    letter-spacing: 0;
+}
+
+.overline {
+    margin-bottom: 8px;
+    color: var(--rosy);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}

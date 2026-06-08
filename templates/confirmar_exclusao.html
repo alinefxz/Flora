@@ -1,26 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}Excluir | {{ config.titulo }}{% endblock %}
-{% block page_name %}{{ config.titulo }}{% endblock %}
+{% block title %}Excluir | FLORA{% endblock %}
 
 {% block content %}
-<section class="page-intro">
-    <div>
-        <p class="eyebrow">Exclusão</p>
-        <h1>Excluir registro</h1>
-        <p>Confira antes de remover este item.</p>
-    </div>
-</section>
-
-<section class="soft-panel danger-panel">
-    <h2>Tem certeza?</h2>
-    <p>Você está prestes a excluir:</p>
-    <strong>{{ obj }}</strong>
+<section class="delete-panel">
+    <p class="overline">{{ config.titulo }}</p>
+    <h1>Excluir registro?</h1>
+    <p>
+        O registro <strong>{{ objeto }}</strong> será removido
+        permanentemente.
+    </p>
 
     <form method="post" class="form-actions">
         {% csrf_token %}
-        <button type="submit" class="btn-danger">Excluir</button>
-        <a href="{% url 'saude:lista' slug %}" class="btn-ghost">Cancelar</a>
+        <a href="{% url 'saude:lista' slug %}">Cancelar</a>
+        <button type="submit" class="danger-button">
+            Excluir
+        </button>
     </form>
 </section>
 {% endblock %}

@@ -2,62 +2,79 @@
 {% load flora_tags %}
 
 {% block title %}{{ config.titulo }} | FLORA{% endblock %}
-{% block page_name %}{{ config.titulo }}{% endblock %}
 
 {% block content %}
-<section class="page-intro">
+<header class="page-heading page-heading-row">
     <div>
-        <p class="eyebrow">{{ config.grupo }}</p>
+        <p class="overline">{{ config.secao }}</p>
         <h1>{{ config.titulo }}</h1>
-        <p>{{ config.subtitulo }}</p>
     </div>
 
-    {% if not config.somente_leitura %}
-        <a href="{% url 'saude:criar' slug %}" class="btn-primary">Novo registro</a>
+    {% if pode_editar %}
+        <a href="{% url 'saude:criar' slug %}"
+           class="primary-button">
+            Novo registro
+        </a>
     {% endif %}
-</section>
+</header>
 
-<section class="soft-panel">
-    <form method="get" class="search-row">
-        <input type="search" name="q" value="{{ q }}" placeholder="Buscar em {{ config.titulo|lower }}">
+<section class="list-toolbar">
+    <form method="get" class="search-form">
+        <input type="search" name="q" value="{{ termo }}"
+               placeholder="Buscar registros">
         <button type="submit">Buscar</button>
-        {% if q %}
-            <a href="{% url 'saude:lista' slug %}" class="btn-ghost">Limpar</a>
+
+        {% if termo %}
+            <a href="{% url 'saude:lista' slug %}">Limpar</a>
         {% endif %}
     </form>
+</section>
 
-    <div class="record-grid">
-        {% for obj in objetos %}
-            <article class="record-card">
-                <div class="record-head">
-                    <strong>{{ obj }}</strong>
-                    <span>#{{ obj.pk }}</span>
-                </div>
+<section class="record-list">
+    {% for objeto in objetos %}
+        <article class="record-row">
+            <header class="record-title">
+                <strong>{{ objeto }}</strong>
+                <span>#{{ objeto.pk }}</span>
+            </header>
 
-                <dl>
-                    {% for campo in campos %}
-                        <div>
-                            <dt>{{ campo|labelize }}</dt>
-                            <dd>{{ obj|get_attr:campo }}</dd>
-                        </div>
-                    {% endfor %}
-                </dl>
+            <dl class="record-data">
+                {% for coluna in colunas %}
+                    <div>
+                        <dt>{{ coluna.rotulo }}</dt>
+                        <dd>{{ objeto|get_attr:coluna.nome }}</dd>
+                    </div>
+                {% endfor %}
+            </dl>
 
-                <div class="record-actions">
-                    <a href="{% url 'saude:detalhe' slug obj.pk %}">Ver</a>
+            <footer class="record-actions">
+                <a href="{% url 'saude:detalhe' slug objeto.pk %}">
+                    Ver detalhes
+                </a>
 
-                    {% if not config.somente_leitura %}
-                        <a href="{% url 'saude:editar' slug obj.pk %}">Editar</a>
-                        <a href="{% url 'saude:excluir' slug obj.pk %}">Excluir</a>
-                    {% endif %}
-                </div>
-            </article>
-        {% empty %}
-            <div class="empty-state">
-                <strong>Nenhum registro por enquanto.</strong>
-                <span>Quando houver dados cadastrados, eles aparecerão aqui.</span>
-            </div>
-        {% endfor %}
-    </div>
+                {% if pode_editar %}
+                    <a href="{% url 'saude:editar' slug objeto.pk %}">
+                        Editar
+                    </a>
+                    <a href="{% url 'saude:excluir' slug objeto.pk %}">
+                        Excluir
+                    </a>
+                {% endif %}
+
+                {% if slug == "notificacoes" and not objeto.lida %}
+                    <form method="post"
+                          action="{% url 'saude:marcar_notificacao' objeto.pk %}">
+                        {% csrf_token %}
+                        <button type="submit">Marcar como lida</button>
+                    </form>
+                {% endif %}
+            </footer>
+        </article>
+    {% empty %}
+        <div class="empty-state">
+            <strong>Nenhum registro encontrado.</strong>
+            <p>Os dados cadastrados aparecerão aqui.</p>
+        </div>
+    {% endfor %}
 </section>
 {% endblock %}

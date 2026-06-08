@@ -1,33 +1,33 @@
 {% extends "base.html" %}
 {% load flora_tags %}
 
-{% block title %}Detalhe | {{ config.titulo }}{% endblock %}
-{% block page_name %}{{ config.titulo }}{% endblock %}
+{% block title %}{{ objeto }} | FLORA{% endblock %}
 
 {% block content %}
-<section class="page-intro">
+<header class="page-heading page-heading-row">
     <div>
-        <p class="eyebrow">Detalhe</p>
-        <h1>{{ obj }}</h1>
-        <p>Visualização completa deste registro.</p>
+        <p class="overline">{{ config.titulo }}</p>
+        <h1>{{ objeto }}</h1>
     </div>
 
-    <div class="heading-actions">
-        {% if not config.somente_leitura %}
-            <a href="{% url 'saude:editar' slug obj.pk %}" class="btn-primary">Editar</a>
-        {% endif %}
-        <a href="{% url 'saude:lista' slug %}" class="btn-ghost">Voltar</a>
-    </div>
+    {% if pode_editar %}
+        <a href="{% url 'saude:editar' slug objeto.pk %}"
+           class="primary-button">
+            Editar
+        </a>
+    {% endif %}
+</header>
+
+<section class="detail-list">
+    {% for campo in campos %}
+        <div class="detail-row">
+            <span>{{ campo.rotulo }}</span>
+            <strong>{{ objeto|get_attr:campo.nome }}</strong>
+        </div>
+    {% endfor %}
 </section>
 
-<section class="soft-panel">
-    <dl class="detail-grid">
-        {% for campo in campos %}
-            <div>
-                <dt>{{ campo|labelize }}</dt>
-                <dd>{{ obj|get_attr:campo }}</dd>
-            </div>
-        {% endfor %}
-    </dl>
-</section>
+<a href="{% url 'saude:lista' slug %}" class="back-link">
+    Voltar para {{ config.titulo }}
+</a>
 {% endblock %}

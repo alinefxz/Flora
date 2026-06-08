@@ -1,89 +1,99 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}FLORA{% endblock %}</title>
 
     <link rel="icon" type="image/png" href="{% static 'logoF.png' %}">
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
-    <link rel="stylesheet" href="{% static 'css/shell.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="{% static 'js/app.js' %}" defer></script>
 </head>
 <body>
-    <input type="checkbox" id="menu-toggle" class="menu-toggle" checked>
-
-    <aside class="sidebar">
-        <div class="brand">
-            <img src="{% static 'logoF.png' %}" alt="FLORA" class="brand-icon">
-            <div class="brand-text">
-                <strong>flora</strong>
-                <span>mapa hormonal</span>
+    <aside class="drawer" id="main-menu" aria-hidden="true">
+        <div class="drawer-head">
+            <div class="wordmark-crop">
+                <img src="{% static 'logoNome.png' %}" alt="Flora">
             </div>
+
+            <button type="button" class="icon-button" data-menu-close
+                    aria-label="Fechar menu">×</button>
         </div>
 
-        <nav class="nav">
-            <a href="{% url 'saude:dashboard' %}" class="nav-link">Dashboard</a>
+        <nav class="drawer-nav">
+            <a href="{% url 'saude:dashboard' %}" class="drawer-link">
+                Visão geral
+            </a>
 
-            {% if user.is_authenticated %}
-                {% if user.is_superuser or user.tipo_usuario == "ADMIN" %}
-                    <p class="nav-title">Administração</p>
-                    {% for item in menu.admin %}
-                        <a href="{% url 'saude:lista' item.slug %}" class="nav-link">{{ item.titulo }}</a>
+            {% for secao in menu_secoes %}
+                <section class="menu-section">
+                    <h2>{{ secao.titulo }}</h2>
+
+                    {% for item in secao.itens %}
+                        <a href="{% url 'saude:lista' item.slug %}"
+                           class="drawer-link">
+                            {{ item.titulo }}
+                        </a>
                     {% endfor %}
-                {% endif %}
+                </section>
+            {% endfor %}
 
-                {% if user.is_superuser or user.tipo_usuario == "ADMIN" or user.tipo_usuario == "USUARIA" %}
-                    <p class="nav-title">Usuária</p>
-                    {% for item in menu.usuaria %}
-                        <a href="{% url 'saude:lista' item.slug %}" class="nav-link">{{ item.titulo }}</a>
-                    {% endfor %}
-                {% endif %}
-
-                {% if user.is_superuser or user.tipo_usuario == "ADMIN" or user.tipo_usuario == "ESPECIALISTA" %}
-                    <p class="nav-title">Especialista</p>
-                    {% for item in menu.especialista %}
-                        <a href="{% url 'saude:lista' item.slug %}" class="nav-link">{{ item.titulo }}</a>
-                    {% endfor %}
-                {% endif %}
-
-                {% if user.is_superuser %}
-                    <p class="nav-title">Sistema</p>
-                    <a href="/admin/" class="nav-link">Django Admin</a>
-                {% endif %}
+            {% if user.is_superuser or user.tipo_usuario == "ADMIN" %}
+                <section class="menu-section">
+                    <h2>Sistema</h2>
+                    <a href="/admin/" class="drawer-link">
+                        Administração Django
+                    </a>
+                </section>
             {% endif %}
         </nav>
+
+        <div class="drawer-user">
+            <strong>{{ user.nome_completo }}</strong>
+            <span>{{ user.get_tipo_usuario_display }}</span>
+            <a href="{% url 'saude:sair' %}">Sair</a>
+        </div>
     </aside>
 
-    <main class="app-shell">
-        <header class="topbar">
-            <label for="menu-toggle" class="hamburger" aria-label="Abrir menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </label>
+    <button type="button" class="menu-overlay" data-menu-close
+            aria-label="Fechar menu"></button>
 
-            <div class="topbar-title">
-                <strong>{% block page_name %}FLORA{% endblock %}</strong>
-                <span>{% if user.is_authenticated %}{{ user.nome_completo }}{% else %}Bem-vinda{% endif %}</span>
+    <header class="topbar">
+        <button type="button" class="menu-button" data-menu-open
+                aria-controls="main-menu" aria-label="Abrir menu">
+            <span></span><span></span><span></span>
+        </button>
+
+        <a href="{% url 'saude:dashboard' %}" class="topbar-brand">
+            <div class="wordmark-crop">
+                <img src="{% static 'logoNome.png' %}" alt="Flora">
             </div>
+        </a>
 
-            <div class="topbar-actions">
-                {% if user.is_authenticated %}
-                    <a href="{% url 'saude:sair' %}" class="pill-link">Sair</a>
-                {% else %}
-                    <a href="{% url 'saude:entrar' %}" class="pill-link">Entrar</a>
-                {% endif %}
-            </div>
-        </header>
+        <div class="topbar-right">
+            {% if perfil_atual == "USUARIA" %}
+                <a href="{% url 'saude:lista' 'notificacoes' %}"
+                   class="notification-link">
+                    Notificações
+                    {% if notificacoes_nao_lidas %}
+                        <span>{{ notificacoes_nao_lidas }}</span>
+                    {% endif %}
+                </a>
+            {% endif %}
 
+            <span class="user-name">{{ user.nome_completo }}</span>
+        </div>
+    </header>
+
+    <main class="page-shell">
         {% if messages %}
-            <section class="messages">
+            <div class="messages">
                 {% for message in messages %}
                     <div class="message">{{ message }}</div>
                 {% endfor %}
-            </section>
+            </div>
         {% endif %}
 
         {% block content %}{% endblock %}
