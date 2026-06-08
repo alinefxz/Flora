@@ -333,7 +333,11 @@ class AdminFloraForm(PessoaForm):
 class PerfilHormonalForm(FloraModelForm):
     class Meta:
         model = PerfilHormonal
-        fields = "__all__"
+        fields = [
+            "usuario", "uso_contraceptivo", "condicao_hormonal",
+            "ciclo_regular", "duracao_ciclo",
+            "fluxo_menstrual", "observacoes",
+        ]
 
 
 class ProdutoForm(FloraModelForm):
@@ -357,14 +361,80 @@ class CicloMenstrualForm(FloraModelForm):
 
 
 class RegistroSintomaForm(FloraModelForm):
+    sintoma_opcao = forms.ChoiceField(label="Qual sintoma você sentiu?")
+    outro_sintoma = forms.CharField(
+        label="Nome do sintoma",
+        required=False,
+    )
+    descricao_outro = forms.CharField(
+        label="Descreva o sintoma",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+
     class Meta:
         model = RegistroSintoma
-        fields = "__all__"
-        help_texts = {
-            "fase_ciclo": (
-                "Pode ficar vazia. O FLORA calculará automaticamente."
-            ),
+        fields = [
+            "usuario", "sintoma_opcao", "outro_sintoma",
+            "descricao_outro", "data_ocorrencia",
+            "intensidade", "observacoes",
+        ]
+        widgets = {
+            "data_ocorrencia": forms.DateInput(attrs={"type": "date"}),
+            "intensidade": forms.NumberInput(attrs={
+                "min": 1, "max": 5,
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        sintomas = Sintoma.objects.order_by("nome")
+        self.fields["sintoma_opcao"].choices = [
+            ("", "Selecione um sintoma"),
+            *[(str(item.pk), item.nome) for item in sintomas],
+            ("OUTRO", "Não encontrei meu sintoma"),
+        ]
+
+        if self.instance.pk:
+            self.initial["sintoma_opcao"] = str(
+                self.instance.sintoma_id
+            )
+
+    def clean(self):
+        cleaned = super().clean()
+        opcao = cleaned.get("sintoma_opcao")
+
+        if opcao == "OUTRO" and not cleaned.get("outro_sintoma"):
+            self.add_error(
+                "outro_sintoma",
+                "Informe o nome do sintoma.",
+            )
+
+        return cleaned
+
+    def save(self, commit=True):
+        registro = super().save(commit=False)
+        opcao = self.cleaned_data["sintoma_opcao"]
+
+        if opcao == "OUTRO":
+            sintoma, _ = Sintoma.objects.get_or_create(
+                nome=self.cleaned_data["outro_sintoma"].strip(),
+                defaults={
+                    "descricao": self.cleaned_data.get(
+                        "descricao_outro", ""
+                    )
+                },
+            )
+        else:
+            sintoma = Sintoma.objects.get(pk=opcao)
+
+        registro.sintoma = sintoma
+
+        if commit:
+            registro.save()
+
+        return registro
 
 
 def criar_model_form(model, disabled=()):

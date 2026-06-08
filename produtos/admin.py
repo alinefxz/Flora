@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Categoria, Ingrediente, Produto, ProdutoIngrediente, Referencia, Substancia, SugestaoTroca, TipoDesregulador
-
+from .models import ComentarioProduto, CurtidaComentario
 
 class ProdutoInline(admin.TabularInline):
     model = Produto
@@ -79,3 +79,30 @@ class SugestaoTrocaAdmin(admin.ModelAdmin):
 class ReferenciaAdmin(admin.ModelAdmin):
     list_display = ("titulo_artigo", "ano_publicacao", "substancia", "instituicao_fonte")
     search_fields = ("titulo_artigo", "autores", "substancia__nome")
+
+@admin.register(ComentarioProduto)
+class ComentarioProdutoAdmin(admin.ModelAdmin):
+    list_display = (
+        "produto",
+        "autor",
+        "ativo",
+        "total_curtidas",
+        "criado_em",
+    )
+    list_filter = ("ativo", "criado_em")
+    search_fields = (
+        "produto__nome",
+        "autor__nome_completo",
+        "texto",
+    )
+    autocomplete_fields = ("produto", "autor")
+
+
+@admin.register(CurtidaComentario)
+class CurtidaComentarioAdmin(admin.ModelAdmin):
+    list_display = ("comentario", "usuario", "criada_em")
+    search_fields = (
+        "usuario__nome_completo",
+        "comentario__texto",
+    )
+    autocomplete_fields = ("comentario", "usuario")

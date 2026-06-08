@@ -120,5 +120,26 @@ class PerfilHormonal(models.Model):
         verbose_name = "Perfil Hormonal"
         verbose_name_plural = "Perfis Hormonais"
 
+    def calcular_peso_sensibilidade(self):
+        peso = 1.0
+        condicao = (self.condicao_hormonal or "").lower()
+
+        if "sop" in condicao:
+            peso += 0.35
+        if "endometriose" in condicao:
+            peso += 0.35
+        if not self.ciclo_regular:
+            peso += 0.15
+        if self.fluxo_menstrual == "INTENSO":
+            peso += 0.10
+        if self.uso_contraceptivo:
+            peso += 0.10
+
+        return round(min(peso, 2.5), 2)
+
+    def save(self, *args, **kwargs):
+        self.peso_sensibilidade = self.calcular_peso_sensibilidade()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Perfil hormonal de {self.usuario.nome_completo}"

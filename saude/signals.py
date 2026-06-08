@@ -18,3 +18,9 @@ def recalcular_produto_e_usuarios(sender, instance, **kwargs):
     usuarios = produto.usuarios_no_armario.select_related("usuario")
     for item in usuarios:
         calcular_exposicao_usuario(item.usuario)
+
+from usuarios.models import PerfilHormonal
+@receiver(post_save, sender=PerfilHormonal)
+def recalcular_apos_alterar_perfil(sender, instance, **kwargs):
+    if instance.usuario.armario.exists():
+        calcular_exposicao_usuario(instance.usuario)

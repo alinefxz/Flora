@@ -243,7 +243,7 @@ ENTIDADES = {
         Sintoma, SintomaForm,
         ["nome", "descricao"],
         ["nome", "descricao"],
-        visualizar=(ADMIN, USUARIA),
+        visualizar=(ADMIN),
     ),
     "registros-sintomas": entidade(
         "Diário de sintomas", "Minha saúde",
@@ -586,7 +586,7 @@ def dashboard(request):
         )[:4]
 
     else:
-        exposicao = Exposicao.objects.first()
+        exposicao = None
         metricas = [
             {
                 "rotulo": "Usuárias",
@@ -807,8 +807,3 @@ def marcar_notificacao(request, pk):
     notificacao.save(update_fields=["lida"])
     return redirect("saude:lista", slug="notificacoes")
 
-# Produtos públicos para todos
-visualizar=(ADMIN, ESPECIALISTA, USUARIA),
-
-# Exposições e detalhes nunca aparecem para especialistas
-visualizar=(ADMIN, USUARIA),

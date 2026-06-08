@@ -131,3 +131,66 @@ class Referencia(models.Model):
 
     def __str__(self):
         return self.titulo_artigo
+    
+
+from django.conf import settings
+
+
+class ComentarioProduto(models.Model):
+    produto = models.ForeignKey(
+        Produto,
+        on_delete=models.CASCADE,
+        related_name="comentarios",
+        verbose_name="Produto",
+    )
+    autor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="comentarios_produtos",
+        verbose_name="Autor",
+    )
+    texto = models.TextField("Comentário")
+    ativo = models.BooleanField("Ativo", default=True)
+    criado_em = models.DateTimeField("Criado em", auto_now_add=True)
+    atualizado_em = models.DateTimeField("Atualizado em", auto_now=True)
+
+    class Meta:
+        ordering = ["-criado_em"]
+        verbose_name = "Comentário de produto"
+        verbose_name_plural = "Comentários de produtos"
+
+    @property
+    def total_curtidas(self):
+        return self.curtidas.count()
+
+    def __str__(self):
+        return f"{self.autor} comentou em {self.produto}"
+
+
+class CurtidaComentario(models.Model):
+    comentario = models.ForeignKey(
+        ComentarioProduto,
+        on_delete=models.CASCADE,
+        related_name="curtidas",
+        verbose_name="Comentário",
+    )
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="comentarios_curtidos",
+        verbose_name="Usuário",
+    )
+    criada_em = models.DateTimeField("Criada em", auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["comentario", "usuario"],
+                name="curtida_unica_por_usuario",
+            )
+        ]
+        verbose_name = "Curtida"
+        verbose_name_plural = "Curtidas"
+
+    def __str__(self):
+        return f"{self.usuario} curtiu o comentário #{self.comentario_id}"
