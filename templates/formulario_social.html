@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load flora_tags %}
+
+{% block title %}{{ titulo_form }} | FLORA{% endblock %}
+
+{% block content %}
+<header class="page-heading form-page-heading">
+    <p class="overline">Conteúdo técnico</p>
+    <h1>{{ titulo_form }}</h1>
+    <p>
+        Explique a recomendação de forma objetiva. Seu nome,
+        especialidade e registro aparecerão junto à publicação.
+    </p>
+</header>
+
+<form method="post" class="content-panel data-form form-card">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div class="form-grid">
+        {% for field in form %}
+            <div class="field
+                {% if field|widget_type == 'textarea' %}field-wide{% endif %}">
+                <label for="{{ field.id_for_label }}">
+                    {{ field.label }}
+                    {% if field.field.required %}
+                        <span class="required-mark">*</span>
+                    {% endif %}
+                </label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small>{{ field.help_text }}</small>
+                {% endif %}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+    </div>
+
+    <footer class="form-actions">
+        <a href="{% url 'saude:sugestoes' %}"
+           class="secondary-button">
+            Cancelar
+        </a>
+        <button type="submit" class="primary-button">
+            Publicar sugestão
+        </button>
+    </footer>
+</form>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Especialistas | FLORA{% endblock %}
+
+{% block content %}
+<header class="page-heading">
+    <p class="overline">Quem contribui com a Flora</p>
+    <h1>Especialistas</h1>
+    <p>
+        Conheça os profissionais responsáveis por comentários e
+        sugestões técnicas publicadas na plataforma.
+    </p>
+</header>
+
+<section class="list-toolbar">
+    <form method="get" class="search-form">
+        <input type="search" name="q" value="{{ termo }}"
+               placeholder="Buscar por nome, especialidade ou registro">
+        <button type="submit">Buscar</button>
+        {% if termo %}
+            <a href="{% url 'saude:especialistas' %}">Limpar</a>
+        {% endif %}
+    </form>
+</section>
+
+<section class="specialist-grid">
+    {% for especialista in especialistas %}
+        <article class="specialist-card">
+            <a href="{% url 'saude:perfil_especialista' especialista.pk %}"
+               class="avatar specialist-card-avatar avatar--especialista">
+                {% if especialista.foto_perfil %}
+                    <img src="{{ especialista.foto_perfil.url }}"
+                         alt="Foto de {{ especialista.nome_completo }}">
+                {% else %}
+                    {{ especialista.nome_completo|first|upper }}
+                {% endif %}
+            </a>
+
+            <div class="specialist-card-copy">
+                <span class="tag">Especialista</span>
+                <h2>
+                    <a href="{% url 'saude:perfil_especialista' especialista.pk %}">
+                        {{ especialista.nome_completo }}
+                    </a>
+                </h2>
+                <p class="specialist-title">
+                    {{ especialista.especialidade|default:"Especialidade não informada" }}
+                </p>
+                <p>{{ especialista.biografia|default:"Perfil profissional em atualização."|truncatechars:150 }}</p>
+
+                <div class="specialist-meta">
+                    {% if especialista.registro_profissional %}
+                        <span>{{ especialista.registro_profissional }}</span>
+                    {% endif %}
+                    {% if especialista.cidade %}
+                        <span>{{ especialista.cidade }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <a href="{% url 'saude:perfil_especialista' especialista.pk %}"
+               class="secondary-button">
+                Ver perfil
+            </a>
+        </article>
+    {% empty %}
+        <div class="empty-state empty-state--wide">
+            <strong>Nenhum especialista encontrado.</strong>
+        </div>
+    {% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Catálogo | FLORA{% endblock %}
+
+{% block content %}
+<header class="page-heading page-heading-row">
+    <div>
+        <p class="overline">Escolhas mais conscientes</p>
+        <h1>Catálogo de produtos</h1>
+        <p>
+            Consulte notas, categorias e informações técnicas antes
+            de incluir um produto na sua rotina.
+        </p>
+    </div>
+
+    {% if perfil_atual == "ADMIN" %}
+        <a href="{% url 'saude:criar' 'produtos' %}"
+           class="primary-button">
+            Cadastrar produto
+        </a>
+    {% endif %}
+</header>
+
+<section class="catalog-toolbar">
+    <form method="get" class="catalog-search">
+        <div class="field">
+            <label for="catalog-search">Buscar produto ou marca</label>
+            <input id="catalog-search" type="search" name="q"
+                   value="{{ termo }}"
+                   placeholder="Ex.: hidratante, shampoo, marca...">
+        </div>
+
+        <div class="field">
+            <label for="catalog-category">Categoria</label>
+            <select id="catalog-category" name="categoria">
+                <option value="">Todas as categorias</option>
+                {% for categoria in categorias %}
+                    <option value="{{ categoria.pk }}"
+                        {% if categoria_atual == categoria.pk|stringformat:"s" %}
+                            selected
+                        {% endif %}>
+                        {{ categoria.nome }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="primary-button">Filtrar</button>
+
+        {% if termo or categoria_atual %}
+            <a href="{% url 'saude:catalogo' %}"
+               class="secondary-button">
+                Limpar
+            </a>
+        {% endif %}
+    </form>
+</section>
+
+<section class="product-grid">
+    {% for produto in produtos %}
+        <article class="product-card">
+            <a href="{% url 'saude:produto_social' produto.pk %}"
+               class="product-image">
+                {% if produto.imagem %}
+                    <img src="{{ produto.imagem.url }}"
+                         alt="{{ produto.nome }}">
+                {% else %}
+                    <span>{{ produto.nome|first|upper }}</span>
+                {% endif %}
+                <b class="flora-score">
+                    {{ produto.nota_flora|floatformat:1 }}
+                </b>
+            </a>
+
+            <div class="product-card-body">
+                <span class="tag">{{ produto.categoria.nome }}</span>
+                <h2>
+                    <a href="{% url 'saude:produto_social' produto.pk %}">
+                        {{ produto.nome }}
+                    </a>
+                </h2>
+                <p class="product-brand">{{ produto.marca }}</p>
+                <p>{{ produto.descricao|default:"Informações em atualização."|truncatechars:120 }}</p>
+
+                <footer class="product-card-footer">
+                    <span>{{ produto.total_comentarios }} comentário{{ produto.total_comentarios|pluralize }}</span>
+                    <a href="{% url 'saude:produto_social' produto.pk %}">
+                        Ver análise
+                    </a>
+                </footer>
+            </div>
+        </article>
+    {% empty %}
+        <div class="empty-state empty-state--wide">
+            <strong>Nenhum produto encontrado.</strong>
+            <p>Tente outro nome, marca ou categoria.</p>
+        </div>
+    {% endfor %}
+</section>
+{% endblock %}

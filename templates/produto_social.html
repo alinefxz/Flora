@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}{{ produto.nome }} | FLORA{% endblock %}
+
+{% block content %}
+<a href="{% url 'saude:catalogo' %}" class="back-link back-link--top">
+    ← Voltar ao catálogo
+</a>
+
+<section class="product-detail-hero">
+    <div class="product-detail-image">
+        {% if produto.imagem %}
+            <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}">
+        {% else %}
+            <span>{{ produto.nome|first|upper }}</span>
+        {% endif %}
+    </div>
+
+    <div class="product-detail-copy">
+        <span class="tag">{{ produto.categoria.nome }}</span>
+        <h1>{{ produto.nome }}</h1>
+        <p class="product-brand">{{ produto.marca }}</p>
+        <p>{{ produto.descricao|default:"Descrição ainda não informada." }}</p>
+
+        <dl class="product-facts">
+            <div>
+                <dt>Nota Flora</dt>
+                <dd>{{ produto.nota_flora|floatformat:1 }}/5</dd>
+            </div>
+            <div>
+                <dt>Fabricante</dt>
+                <dd>{{ produto.fabricante|default:"Não informado" }}</dd>
+            </div>
+            <div>
+                <dt>Código de barras</dt>
+                <dd>{{ produto.codigo_barras }}</dd>
+            </div>
+        </dl>
+
+        {% if perfil_atual == "USUARIA" %}
+            {% if esta_no_armario %}
+                <a href="{% url 'saude:armario' %}"
+                   class="secondary-button">
+                    Já está no meu armário
+                </a>
+            {% else %}
+                <a href="{% url 'saude:armario' %}"
+                   class="primary-button">
+                    Adicionar pelo meu armário
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+</section>
+
+<section class="social-columns">
+    <article class="content-panel">
+        <header class="panel-heading">
+            <div>
+                <p class="overline">Composição</p>
+                <h2>Ingredientes cadastrados</h2>
+            </div>
+        </header>
+
+        <div class="ingredient-list">
+            {% for item in produto.composicao.all %}
+                <div class="ingredient-item">
+                    <div>
+                        <strong>{{ item.ingrediente.nome }}</strong>
+                        <span>{{ item.ingrediente.funcao_quimica|default:"Função não informada" }}</span>
+                    </div>
+                    <span>
+                        {{ item.concentracao_estimada|floatformat:2 }}
+                        {{ item.unidade_concentracao }}
+                    </span>
+                </div>
+            {% empty %}
+                <div class="empty-inline">
+                    <p>A composição ainda não foi cadastrada.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </article>
+
+    <aside class="content-panel">
+        <header class="panel-heading">
+            <div>
+                <p class="overline">Alternativas</p>
+                <h2>Sugestões de troca</h2>
+            </div>
+        </header>
+
+        <div class="mini-suggestion-list">
+            {% for sugestao in sugestoes %}
+                <article class="mini-suggestion">
+                    <span>Trocar por</span>
+                    <strong>{{ sugestao.produto_seguro.nome }}</strong>
+                    <p>{{ sugestao.justificativa_tecnica|truncatechars:150 }}</p>
+
+                    {% if sugestao.especialista %}
+                        <a href="{% url 'saude:perfil_especialista' sugestao.especialista.pk %}"
+                           class="specialist-byline">
+                            <span class="avatar avatar--small avatar--especialista">
+                                {% if sugestao.especialista.foto_perfil %}
+                                    <img src="{{ sugestao.especialista.foto_perfil.url }}"
+                                         alt="Foto de {{ sugestao.especialista.nome_completo }}">
+                                {% else %}
+                                    {{ sugestao.especialista.nome_completo|first|upper }}
+                                {% endif %}
+                            </span>
+                            <span>
+                                <b>{{ sugestao.especialista.nome_completo }}</b>
+                                <small>
+                                    {{ sugestao.especialista.especialidade|default:"Especialista" }}
+                                    {% if sugestao.especialista.registro_profissional %}
+                                        · {{ sugestao.especialista.registro_profissional }}
+                                    {% endif %}
+                                </small>
+                            </span>
+                        </a>
+                    {% else %}
+                        <div class="specialist-byline">
+                            <span class="avatar avatar--small avatar--admin">F</span>
+                            <span>
+                                <b>Equipe Flora</b>
+                                <small>Base técnica da plataforma</small>
+                            </span>
+                        </div>
+                    {% endif %}
+                </article>
+            {% empty %}
+                <div class="empty-inline">
+                    <p>Ainda não há uma troca sugerida para este produto.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </aside>
+</section>
+
+<section class="content-panel comments-panel">
+    <header class="panel-heading">
+        <div>
+            <p class="overline">Discussão técnica</p>
+            <h2>Comentários de especialistas</h2>
+        </div>
+    </header>
+
+    {% if pode_comentar %}
+        <form method="post"
+              action="{% url 'saude:comentar_produto' produto.pk %}"
+              class="comment-form">
+            {% csrf_token %}
+            <div class="field">
+                <label for="{{ comentario_form.texto.id_for_label }}">
+                    Adicionar observação
+                </label>
+                {{ comentario_form.texto }}
+                {{ comentario_form.texto.errors }}
+            </div>
+            <button type="submit" class="primary-button">
+                Publicar comentário
+            </button>
+        </form>
+    {% endif %}
+
+    <div class="comment-list">
+        {% for comentario in comentarios %}
+            <article class="comment-card">
+                <header class="comment-author">
+                    <span class="avatar avatar--small avatar--{{ comentario.autor.tipo_usuario|lower }}">
+                        {% if comentario.autor.foto_perfil %}
+                            <img src="{{ comentario.autor.foto_perfil.url }}"
+                                 alt="Foto de {{ comentario.autor.nome_completo }}">
+                        {% else %}
+                            {{ comentario.autor.nome_completo|first|upper }}
+                        {% endif %}
+                    </span>
+                    <div>
+                        <strong>{{ comentario.autor.nome_completo }}</strong>
+                        <span>
+                            {{ comentario.autor.especialidade|default:comentario.autor.get_tipo_usuario_display }}
+                            · {{ comentario.criado_em|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                </header>
+
+                <p>{{ comentario.texto }}</p>
+
+                <form method="post"
+                      action="{% url 'saude:curtir_comentario' comentario.pk %}"
+                      data-like-form>
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="like-button {% if comentario.pk in comentarios_curtidos %}is-liked{% endif %}"
+                            aria-pressed="{% if comentario.pk in comentarios_curtidos %}true{% else %}false{% endif %}">
+                        Útil · <span data-like-count>{{ comentario.total_curtidas }}</span>
+                    </button>
+                </form>
+            </article>
+        {% empty %}
+            <div class="empty-inline">
+                <p>Ainda não há comentários técnicos neste produto.</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

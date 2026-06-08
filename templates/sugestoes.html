@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Sugestões de troca | FLORA{% endblock %}
+
+{% block content %}
+<header class="page-heading page-heading-row">
+    <div>
+        <p class="overline">Alternativas mais seguras</p>
+        <h1>Sugestões de troca</h1>
+        <p>
+            Cada indicação mostra o produto sugerido, a justificativa
+            e as informações de quem realizou a análise.
+        </p>
+    </div>
+
+    {% if pode_sugerir %}
+        <a href="{% url 'saude:sugestao_nova' %}"
+           class="primary-button">
+            Nova sugestão
+        </a>
+    {% endif %}
+</header>
+
+<section class="suggestion-grid">
+    {% for sugestao in sugestoes %}
+        <article class="suggestion-card">
+            <div class="swap-products">
+                <a href="{% url 'saude:produto_social' sugestao.produto_risco.pk %}"
+                   class="swap-product swap-product--risk">
+                    <span>Produto atual</span>
+                    <strong>{{ sugestao.produto_risco.nome }}</strong>
+                    <small>{{ sugestao.produto_risco.marca }}</small>
+                </a>
+
+                <span class="swap-arrow" aria-hidden="true">→</span>
+
+                <a href="{% url 'saude:produto_social' sugestao.produto_seguro.pk %}"
+                   class="swap-product swap-product--safe">
+                    <span>Alternativa sugerida</span>
+                    <strong>{{ sugestao.produto_seguro.nome }}</strong>
+                    <small>{{ sugestao.produto_seguro.marca }}</small>
+                </a>
+            </div>
+
+            <div class="suggestion-reason">
+                <span class="tag">{{ sugestao.origem_sugestao }}</span>
+                <h2>Por que trocar?</h2>
+                <p>{{ sugestao.justificativa_tecnica }}</p>
+                <span class="confidence">
+                    Confiança técnica:
+                    {{ sugestao.confianca|floatformat:2 }}
+                </span>
+            </div>
+
+            <footer class="suggestion-author">
+                {% if sugestao.especialista %}
+                    <a href="{% url 'saude:perfil_especialista' sugestao.especialista.pk %}"
+                       class="specialist-byline specialist-byline--large">
+                        <span class="avatar avatar--especialista">
+                            {% if sugestao.especialista.foto_perfil %}
+                                <img src="{{ sugestao.especialista.foto_perfil.url }}"
+                                     alt="Foto de {{ sugestao.especialista.nome_completo }}">
+                            {% else %}
+                                {{ sugestao.especialista.nome_completo|first|upper }}
+                            {% endif %}
+                        </span>
+                        <span>
+                            <small>Sugestão feita por</small>
+                            <b>{{ sugestao.especialista.nome_completo }}</b>
+                            <em>
+                                {{ sugestao.especialista.especialidade|default:"Especialista" }}
+                                {% if sugestao.especialista.registro_profissional %}
+                                    · {{ sugestao.especialista.registro_profissional }}
+                                {% endif %}
+                                {% if sugestao.especialista.cidade %}
+                                    · {{ sugestao.especialista.cidade }}
+                                {% endif %}
+                            </em>
+                        </span>
+                    </a>
+                {% else %}
+                    <div class="specialist-byline specialist-byline--large">
+                        <span class="avatar avatar--admin">F</span>
+                        <span>
+                            <small>Sugestão feita por</small>
+                            <b>Equipe Flora</b>
+                            <em>Base técnica da plataforma</em>
+                        </span>
+                    </div>
+                {% endif %}
+
+                {% if user.tipo_usuario == "ADMIN" or sugestao.especialista_id == user.id %}
+                    <a href="{% url 'saude:sugestao_editar' sugestao.pk %}"
+                       class="secondary-button">
+                        Editar
+                    </a>
+                {% endif %}
+            </footer>
+        </article>
+    {% empty %}
+        <div class="empty-state empty-state--wide">
+            <strong>Ainda não há sugestões publicadas.</strong>
+            {% if pode_sugerir %}
+                <p>Publique a primeira alternativa de troca.</p>
+            {% endif %}
+        </div>
+    {% endfor %}
+</section>
+{% endblock %}

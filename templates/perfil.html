@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load flora_tags %}
+
+{% block title %}{{ perfil.nome_completo }} | FLORA{% endblock %}
+
+{% block content %}
+<section class="profile-hero profile-hero--{{ perfil.tipo_usuario|lower }}">
+    <div class="profile-avatar-wrap">
+        <span class="avatar profile-avatar avatar--{{ perfil.tipo_usuario|lower }}"
+              {% if perfil_proprio %}data-avatar-preview{% endif %}>
+            {% if perfil.foto_perfil %}
+                <img src="{{ perfil.foto_perfil.url }}"
+                     alt="Foto de {{ perfil.nome_completo }}">
+            {% else %}
+                {{ perfil.nome_completo|first|upper }}
+            {% endif %}
+        </span>
+    </div>
+
+    <div class="profile-hero-copy">
+        <span class="profile-role">{{ perfil.get_tipo_usuario_display }}</span>
+        <h1>{{ perfil.nome_completo }}</h1>
+
+        {% if perfil.tipo_usuario == "ESPECIALISTA" %}
+            <p class="profile-specialty">
+                {{ perfil.especialidade|default:"Especialidade não informada" }}
+            </p>
+            <div class="profile-meta">
+                {% if perfil.registro_profissional %}
+                    <span>{{ perfil.registro_profissional }}</span>
+                {% endif %}
+                {% if perfil.cidade %}
+                    <span>{{ perfil.cidade }}</span>
+                {% endif %}
+            </div>
+        {% elif perfil.tipo_usuario == "ADMIN" %}
+            <p class="profile-specialty">
+                {{ perfil.nivel_acesso|default:"Administração da plataforma" }}
+            </p>
+        {% else %}
+            <p class="profile-specialty">
+                {{ perfil.apelido|default:"Perfil pessoal" }}
+            </p>
+            {% if perfil.cidade %}
+                <div class="profile-meta"><span>{{ perfil.cidade }}</span></div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    {% if perfil_proprio %}
+        <span class="profile-own-badge">Seu perfil</span>
+    {% endif %}
+</section>
+
+{% if perfil.tipo_usuario == "ESPECIALISTA" and perfil.biografia %}
+    <section class="profile-bio content-panel">
+        <p class="overline">Sobre a especialista</p>
+        <h2>Atuação profissional</h2>
+        <p>{{ perfil.biografia|linebreaksbr }}</p>
+    </section>
+{% endif %}
+
+{% if perfil_proprio %}
+    <section class="profile-edit-layout">
+        <aside class="profile-edit-note">
+            <p class="overline">Informações pessoais</p>
+            <h2>Edite seu perfil</h2>
+            <p>
+                A foto e os dados profissionais aparecem nos conteúdos
+                publicados por você.
+            </p>
+        </aside>
+
+        <form method="post" enctype="multipart/form-data"
+              class="content-panel form-card profile-form">
+            {% csrf_token %}
+            {{ perfil_form.non_field_errors }}
+
+            <div class="form-grid">
+                {% for field in perfil_form %}
+                    <div class="field
+                        {% if field|widget_type == 'textarea' %}field-wide{% endif %}">
+                        <label for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}
+                            <small>{{ field.help_text }}</small>
+                        {% endif %}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <footer class="form-actions">
+                <button type="submit" class="primary-button">
+                    Salvar alterações
+                </button>
+            </footer>
+        </form>
+    </section>
+{% endif %}
+
+{% if perfil.tipo_usuario == "ESPECIALISTA" %}
+    <section class="profile-contributions">
+        <article class="content-panel">
+            <header class="panel-heading">
+                <div>
+                    <p class="overline">Contribuições</p>
+                    <h2>Sugestões de troca</h2>
+                </div>
+            </header>
+
+            <div class="profile-list">
+                {% for sugestao in sugestoes_perfil %}
+                    <div class="profile-list-item">
+                        <strong>
+                            {{ sugestao.produto_risco.nome }} →
+                            {{ sugestao.produto_seguro.nome }}
+                        </strong>
+                        <p>{{ sugestao.justificativa_tecnica|truncatechars:160 }}</p>
+                    </div>
+                {% empty %}
+                    <p class="empty-text">Nenhuma sugestão publicada.</p>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="content-panel">
+            <header class="panel-heading">
+                <div>
+                    <p class="overline">Participação</p>
+                    <h2>Comentários técnicos</h2>
+                </div>
+            </header>
+
+            <div class="profile-list">
+                {% for comentario in comentarios_perfil %}
+                    <a href="{% url 'saude:produto_social' comentario.produto.pk %}"
+                       class="profile-list-item">
+                        <strong>{{ comentario.produto.nome }}</strong>
+                        <p>{{ comentario.texto|truncatechars:160 }}</p>
+                    </a>
+                {% empty %}
+                    <p class="empty-text">Nenhum comentário publicado.</p>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+{% endif %}
+{% endblock %}

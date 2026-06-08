@@ -1,185 +1,187 @@
-{% load static %}
-<!doctype html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Criar conta | FLORA</title>
+{% extends "auth_base.html" %}
 
-    <link rel="icon" href="{% static 'logoF.png' %}">
+{% block title %}Criar conta | FLORA{% endblock %}
+{% block auth_mode %}auth-mode-register{% endblock %}
+{% block content_class %}auth-content--scroll{% endblock %}
+
+{% block extra_head %}
     {% load static %}
-    <link rel="icon" href="{% static 'img/logoF.png' %}">
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=4">
-    <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=4">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}?v=4">
-    <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=4">
-    <script src="{% static 'js/cadastro.js' %}" defer></script>
-</head>
-<body class="auth-page">
-    <header class="auth-topbar">
-        <div class="wordmark-crop">
-            <img src="{% static 'logoNome.png' %}" alt="Flora">
+    <script src="{% static 'js/cadastro.js' %}?v=5" defer></script>
+{% endblock %}
+
+{% block panel_kicker %}Um espaço que acompanha você{% endblock %}
+{% block panel_title %}Seu cuidado, suas escolhas, seu ritmo.{% endblock %}
+{% block panel_text %}
+    Escolha o tipo de perfil e conte apenas o necessário.
+    A experiência se adapta para usuárias e especialistas.
+{% endblock %}
+
+{% block auth_content %}
+<div class="signup-wrap">
+    <header class="signup-top">
+        <div>
+            <p class="overline">Novo perfil</p>
+            <h2>Crie sua conta.</h2>
+            <p>Os campos profissionais aparecem apenas para especialistas.</p>
         </div>
 
-        <a href="{% url 'saude:entrar' %}">Já tenho conta</a>
+        <a href="{% url 'saude:entrar' %}"
+           class="secondary-button"
+           data-auth-switch>
+            Já tenho uma conta
+        </a>
     </header>
 
-    <main class="signup-shell">
-        <header class="signup-heading">
-            <p class="overline">Novo perfil</p>
-            <h1>Crie sua conta FLORA.</h1>
-            <p>
-                O formulário se adapta ao perfil escolhido. Contas
-                administrativas não podem ser criadas aqui.
+    {% if messages %}
+        <div class="auth-messages" role="status">
+            {% for message in messages %}
+                <div class="form-message">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data"
+          class="signup-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <fieldset class="form-section profile-section">
+            <legend>Como você usará a Flora?</legend>
+            <p class="section-help">
+                Isso organiza seus atalhos e as informações disponíveis.
             </p>
-        </header>
+            <div class="profile-choice">
+                {{ form.tipo_usuario }}
+            </div>
+            {{ form.tipo_usuario.errors }}
+        </fieldset>
 
-        <form method="post" enctype="multipart/form-data"
-              class="signup-form">
-            {% csrf_token %}
-            {{ form.non_field_errors }}
-
-            <fieldset class="form-section">
-                <legend>Como você utilizará o FLORA?</legend>
-                <div class="profile-choice">
-                    {{ form.tipo_usuario }}
+        <fieldset class="form-section">
+            <legend>Informações pessoais</legend>
+            <div class="form-grid">
+                <div class="field field-wide">
+                    <label for="{{ form.nome_completo.id_for_label }}">
+                        Nome completo
+                    </label>
+                    {{ form.nome_completo }}
+                    {{ form.nome_completo.errors }}
                 </div>
-                {{ form.tipo_usuario.errors }}
-            </fieldset>
 
-            <fieldset class="form-section">
-                <legend>Informações pessoais</legend>
-
-                <div class="form-grid">
-                    <div class="field field-wide">
-                        <label for="{{ form.nome_completo.id_for_label }}">
-                            Nome completo
-                        </label>
-                        {{ form.nome_completo }}
-                        {{ form.nome_completo.errors }}
-                    </div>
-
-                    <div class="field">
-                        <label for="{{ form.email.id_for_label }}">
-                            E-mail
-                        </label>
-                        {{ form.email }}
-                        {{ form.email.errors }}
-                    </div>
-
-                    <div class="field">
-                        <label for="{{ form.cpf.id_for_label }}">CPF</label>
-                        {{ form.cpf }}
-                        {{ form.cpf.errors }}
-                    </div>
-
-                    <div class="field">
-                        <label for="{{ form.data_nasc.id_for_label }}">
-                            Data de nascimento
-                        </label>
-                        {{ form.data_nasc }}
-                        {{ form.data_nasc.errors }}
-                    </div>
-
-                    <div class="field">
-                        <label for="{{ form.cidade.id_for_label }}">
-                            Cidade
-                        </label>
-                        {{ form.cidade }}
-                        {{ form.cidade.errors }}
-                    </div>
+                <div class="field">
+                    <label for="{{ form.email.id_for_label }}">E-mail</label>
+                    {{ form.email }}
+                    {{ form.email.errors }}
                 </div>
-            </fieldset>
 
-            <fieldset class="form-section" data-user-fields>
-                <legend>Seu perfil</legend>
-
-                <div class="form-grid">
-                    <div class="field">
-                        <label for="{{ form.apelido.id_for_label }}">
-                            Como prefere ser chamada?
-                        </label>
-                        {{ form.apelido }}
-                        {{ form.apelido.errors }}
-                    </div>
-
-                    <div class="field">
-                        <label for="{{ form.foto_perfil.id_for_label }}">
-                            Foto de perfil
-                        </label>
-                        {{ form.foto_perfil }}
-                        {{ form.foto_perfil.errors }}
-                    </div>
+                <div class="field">
+                    <label for="{{ form.cpf.id_for_label }}">CPF</label>
+                    {{ form.cpf }}
+                    {{ form.cpf.errors }}
                 </div>
-            </fieldset>
 
-            <fieldset class="form-section" data-specialist-fields hidden>
-                <legend>Informações profissionais</legend>
-
-                <div class="form-grid">
-                    <div class="field">
-                        <label for="{{ form.conselho.id_for_label }}">
-                            Conselho
-                        </label>
-                        {{ form.conselho }}
-                        {{ form.conselho.errors }}
-                    </div>
-
-                    <div class="field">
-                        <label for="{{ form.numero_registro.id_for_label }}">
-                            Número e UF
-                        </label>
-                        {{ form.numero_registro }}
-                        {{ form.numero_registro.errors }}
-                    </div>
-
-                    <div class="field field-wide">
-                        <label for="{{ form.especialidade.id_for_label }}">
-                            Especialidade
-                        </label>
-                        {{ form.especialidade }}
-                        {{ form.especialidade.errors }}
-                    </div>
-
-                    <div class="field field-wide">
-                        <label for="{{ form.biografia.id_for_label }}">
-                            Biografia profissional
-                        </label>
-                        {{ form.biografia }}
-                        {{ form.biografia.errors }}
-                    </div>
+                <div class="field">
+                    <label for="{{ form.data_nasc.id_for_label }}">
+                        Data de nascimento
+                    </label>
+                    {{ form.data_nasc }}
+                    {{ form.data_nasc.errors }}
                 </div>
-            </fieldset>
 
-            <fieldset class="form-section">
-                <legend>Segurança</legend>
-
-                <div class="form-grid">
-                    <div class="field">
-                        <label for="{{ form.senha.id_for_label }}">
-                            Senha
-                        </label>
-                        {{ form.senha }}
-                        {{ form.senha.errors }}
-                    </div>
-
-                    <div class="field">
-                        <label for="{{ form.confirmar_senha.id_for_label }}">
-                            Confirmar senha
-                        </label>
-                        {{ form.confirmar_senha }}
-                        {{ form.confirmar_senha.errors }}
-                    </div>
+                <div class="field">
+                    <label for="{{ form.cidade.id_for_label }}">Cidade</label>
+                    {{ form.cidade }}
+                    {{ form.cidade.errors }}
                 </div>
-            </fieldset>
 
-            <footer class="signup-actions">
-                <a href="{% url 'saude:entrar' %}">Cancelar</a>
-                <button type="submit" class="primary-button">
-                    Criar conta
-                </button>
-            </footer>
-        </form>
-    </main>
-</body>
-</html>
+                <div class="field field-wide">
+                    <label for="{{ form.foto_perfil.id_for_label }}">
+                        Foto de perfil
+                    </label>
+                    {{ form.foto_perfil }}
+                    <small>Opcional. Use JPG, PNG ou WebP.</small>
+                    {{ form.foto_perfil.errors }}
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="form-section" data-user-fields>
+            <legend>Como podemos chamar você?</legend>
+            <div class="form-grid">
+                <div class="field field-wide">
+                    <label for="{{ form.apelido.id_for_label }}">
+                        Nome ou apelido preferido
+                    </label>
+                    {{ form.apelido }}
+                    {{ form.apelido.errors }}
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="form-section" data-specialist-fields hidden>
+            <legend>Informações profissionais</legend>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="{{ form.conselho.id_for_label }}">
+                        Conselho profissional
+                    </label>
+                    {{ form.conselho }}
+                    {{ form.conselho.errors }}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.numero_registro.id_for_label }}">
+                        Número e UF
+                    </label>
+                    {{ form.numero_registro }}
+                    {{ form.numero_registro.errors }}
+                </div>
+
+                <div class="field field-wide">
+                    <label for="{{ form.especialidade.id_for_label }}">
+                        Especialidade
+                    </label>
+                    {{ form.especialidade }}
+                    {{ form.especialidade.errors }}
+                </div>
+
+                <div class="field field-wide">
+                    <label for="{{ form.biografia.id_for_label }}">
+                        Apresentação profissional
+                    </label>
+                    {{ form.biografia }}
+                    {{ form.biografia.errors }}
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+            <legend>Segurança</legend>
+            <div class="form-grid">
+                <div class="field">
+                    <label for="{{ form.senha.id_for_label }}">Senha</label>
+                    <div class="input-password">{{ form.senha }}</div>
+                    <small>Use pelo menos 8 caracteres.</small>
+                    {{ form.senha.errors }}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.confirmar_senha.id_for_label }}">
+                        Confirmar senha
+                    </label>
+                    <div class="input-password">{{ form.confirmar_senha }}</div>
+                    {{ form.confirmar_senha.errors }}
+                </div>
+            </div>
+        </fieldset>
+
+        <footer class="signup-actions">
+            <a href="{% url 'saude:entrar' %}" data-auth-switch>
+                Cancelar
+            </a>
+            <button type="submit" class="primary-button">
+                Criar minha conta
+            </button>
+        </footer>
+    </form>
+</div>
+{% endblock %}

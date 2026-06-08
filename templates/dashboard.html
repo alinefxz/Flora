@@ -3,127 +3,289 @@
 {% block title %}Visão geral | FLORA{% endblock %}
 
 {% block content %}
-<header class="page-heading">
-    <div>
-        <p class="overline">Visão geral</p>
-        <h1>Olá, {{ user.apelido|default:user.nome_completo }}.</h1>
-        <p>
-            Este é o seu espaço de acompanhamento no FLORA.
+<section class="welcome-hero welcome-hero--{{ perfil_atual|lower }}">
+    <div class="welcome-copy">
+        <p class="overline">
+            {% if perfil_atual == "USUARIA" %}
+                Seu acompanhamento
+            {% elif perfil_atual == "ESPECIALISTA" %}
+                Área profissional
+            {% else %}
+                Administração Flora
+            {% endif %}
         </p>
-    </div>
-</header>
 
-<section class="metrics">
+        <h1>Olá, {{ user.apelido|default:user.nome_completo }}.</h1>
+
+        {% if perfil_atual == "USUARIA" %}
+            <p>
+                Veja sua exposição mais recente e continue registrando
+                os hábitos que ajudam a construir seu mapa pessoal.
+            </p>
+        {% elif perfil_atual == "ESPECIALISTA" %}
+            <p>
+                Publique orientações de troca, consulte produtos e
+                mantenha seu perfil profissional atualizado.
+            </p>
+        {% else %}
+            <p>
+                Acompanhe o conteúdo, as contas e os alertas do sistema
+                sem misturar tarefas administrativas com o cuidado diário.
+            </p>
+        {% endif %}
+    </div>
+
+    <div class="welcome-actions">
+        {% if perfil_atual == "USUARIA" %}
+            <a href="{% url 'saude:armario' %}" class="primary-button">
+                Atualizar meu armário
+            </a>
+            <a href="{% url 'saude:criar' 'registros-sintomas' %}"
+               class="ghost-button">
+                Registrar sintoma
+            </a>
+        {% elif perfil_atual == "ESPECIALISTA" %}
+            <a href="{% url 'saude:sugestao_nova' %}"
+               class="primary-button">
+                Criar sugestão de troca
+            </a>
+            <a href="{% url 'saude:perfil' %}" class="ghost-button">
+                Editar perfil profissional
+            </a>
+        {% else %}
+            <a href="{% url 'saude:lista' 'pessoas' %}"
+               class="primary-button">
+                Gerenciar pessoas
+            </a>
+            <a href="{% url 'saude:catalogo' %}" class="ghost-button">
+                Ver catálogo
+            </a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="metrics" aria-label="Resumo">
     {% for metrica in metricas %}
-        <a href="{{ metrica.url }}" class="metric">
+        <a href="{{ metrica.url }}"
+           class="metric metric--{{ forloop.counter }}">
             <span>{{ metrica.rotulo }}</span>
             <strong>{{ metrica.valor }}</strong>
+            <small>Ver detalhes</small>
         </a>
     {% endfor %}
 </section>
 
-<section class="dashboard-layout">
-    <article class="content-panel">
-        <header class="panel-heading">
-            <div>
-                <p class="overline">Exposição hormonal</p>
-                <h2>Mapa atual</h2>
-            </div>
-
-            {% if exposicao %}
-                <strong class="total-load">
-                    {{ exposicao.carga_total|floatformat:2 }}
-                </strong>
-            {% endif %}
-        </header>
-
-        <div class="chart-area">
-            <canvas id="radarChart"></canvas>
-        </div>
-    </article>
-
-    <article class="content-panel">
-        <header class="panel-heading">
-            <div>
-                <p class="overline">Atualizações</p>
-                <h2>Atividade recente</h2>
-            </div>
-        </header>
-
-        <div class="activity-list">
-            {% for item in atividades %}
-                <div class="activity-item">
-                    <strong>{{ item }}</strong>
-                </div>
-            {% empty %}
-                <p class="empty-text">
-                    Ainda não existem atualizações para mostrar.
-                </p>
-            {% endfor %}
-        </div>
-    </article>
+<section class="quick-grid">
+    <a href="{% url 'saude:catalogo' %}" class="quick-card quick-card--water">
+        <span>01</span>
+        <strong>Explorar produtos</strong>
+        <p>Consulte notas, composição e comentários técnicos.</p>
+    </a>
+    <a href="{% url 'saude:sugestoes' %}" class="quick-card quick-card--rose">
+        <span>02</span>
+        <strong>Ver trocas sugeridas</strong>
+        <p>Entenda quem indicou cada alternativa e por quê.</p>
+    </a>
+    <a href="{% url 'saude:especialistas' %}" class="quick-card quick-card--moss">
+        <span>03</span>
+        <strong>Conhecer especialistas</strong>
+        <p>Veja especialidade, registro e atuação profissional.</p>
+    </a>
 </section>
 
-{{ radar_valores|json_script:"radar-data" }}
+{% if perfil_atual == "USUARIA" %}
+    <section class="dashboard-layout">
+        <article class="content-panel radar-panel">
+            <header class="panel-heading">
+                <div>
+                    <p class="overline">Exposição hormonal</p>
+                    <h2>Seu radar atual</h2>
+                    <p>
+                        Comparação entre os três eixos calculados a partir
+                        dos produtos do seu armário.
+                    </p>
+                </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const canvas = document.getElementById("radarChart");
-    const data = JSON.parse(
-        document.getElementById("radar-data").textContent
-    );
+                {% if exposicao %}
+                    <div class="total-load">
+                        <span>Carga total</span>
+                        <strong>{{ exposicao.carga_total|floatformat:2 }}</strong>
+                    </div>
+                {% endif %}
+            </header>
 
-    if (!window.Chart) return;
+            <div class="radar-shell">
+                <div class="chart-area">
+                    <canvas id="radarChart"></canvas>
+                </div>
+                <div class="radar-legend">
+                    <span><i class="dot dot--rose"></i> Estrogênica</span>
+                    <span><i class="dot dot--water"></i> Androgênica</span>
+                    <span><i class="dot dot--moss"></i> Tireoidiana</span>
+                </div>
+            </div>
+        </article>
 
-    new Chart(canvas, {
-        type: "radar",
-        data: {
-            labels: [
-                "Estrogênica",
-                "Androgênica",
-                "Tireoidiana"
-            ],
-            datasets: [{
-                label: "Carga hormonal",
-                data: data,
-                backgroundColor: "rgba(211, 150, 140, .25)",
-                borderColor: "#105666",
-                borderWidth: 2,
-                pointBackgroundColor: "#D3968C",
-                pointBorderColor: "#0A3323",
-                pointRadius: 4
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                r: {
-                    beginAtZero: true,
-                    grid: {
-                        color: "rgba(10, 51, 35, .14)"
-                    },
-                    angleLines: {
-                        color: "rgba(10, 51, 35, .14)"
-                    },
-                    pointLabels: {
-                        color: "#0A3323",
-                        font: {
-                            size: 13,
-                            weight: "600"
+        <article class="content-panel activity-panel">
+            <header class="panel-heading">
+                <div>
+                    <p class="overline">Para acompanhar</p>
+                    <h2>Atualizações recentes</h2>
+                </div>
+            </header>
+
+            <div class="activity-list">
+                {% for item in atividades %}
+                    <div class="activity-item">
+                        <span class="activity-dot"></span>
+                        <div>
+                            <strong>{{ item.tipo_notificacao|default:"Atualização" }}</strong>
+                            <p>{{ item.mensagem|default:item }}</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="empty-inline">
+                        <strong>Tudo tranquilo por aqui.</strong>
+                        <p>Novos alertas e avisos aparecerão neste espaço.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+
+    {{ radar_valores|json_script:"radar-data" }}
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const canvas = document.getElementById("radarChart");
+        const source = document.getElementById("radar-data");
+        if (!canvas || !source || !window.Chart) return;
+
+        const values = JSON.parse(source.textContent);
+        const context = canvas.getContext("2d");
+        const fill = context.createLinearGradient(0, 0, 0, 360);
+        fill.addColorStop(0, "rgba(211, 150, 140, .48)");
+        fill.addColorStop(1, "rgba(16, 86, 102, .12)");
+
+        new Chart(canvas, {
+            type: "radar",
+            data: {
+                labels: ["Estrogênica", "Androgênica", "Tireoidiana"],
+                datasets: [{
+                    label: "Carga hormonal",
+                    data: values,
+                    backgroundColor: fill,
+                    borderColor: "#105666",
+                    borderWidth: 3,
+                    pointBackgroundColor: ["#d3968c", "#105666", "#839958"],
+                    pointBorderColor: "#fffef4",
+                    pointBorderWidth: 3,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 900 },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        suggestedMax: Math.max(10, ...values),
+                        grid: { color: "rgba(10, 51, 35, .12)", circular: true },
+                        angleLines: { color: "rgba(10, 51, 35, .12)" },
+                        ticks: {
+                            display: false,
+                            backdropColor: "transparent"
+                        },
+                        pointLabels: {
+                            color: "#0a3323",
+                            padding: 18,
+                            font: { size: 13, weight: "700" }
                         }
                     }
-                }
-            },
-            plugins: {
-                legend: {
-                    labels: {
-                        color: "#0A3323"
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: "#0a3323",
+                        padding: 12,
+                        displayColors: false
                     }
                 }
             }
-        }
+        });
     });
-});
-</script>
+    </script>
+{% elif perfil_atual == "ESPECIALISTA" %}
+    <section class="dashboard-layout dashboard-layout--single">
+        <article class="content-panel">
+            <header class="panel-heading">
+                <div>
+                    <p class="overline">Sua contribuição</p>
+                    <h2>Sugestões publicadas recentemente</h2>
+                </div>
+                <a href="{% url 'saude:sugestoes' %}" class="text-link">
+                    Ver todas
+                </a>
+            </header>
+
+            <div class="activity-list activity-list--cards">
+                {% for item in atividades %}
+                    <a href="{% url 'saude:sugestao_editar' item.pk %}"
+                       class="activity-item">
+                        <span class="activity-dot"></span>
+                        <div>
+                            <strong>
+                                {{ item.produto_risco.nome }} →
+                                {{ item.produto_seguro.nome }}
+                            </strong>
+                            <p>{{ item.justificativa_tecnica|truncatechars:150 }}</p>
+                        </div>
+                    </a>
+                {% empty %}
+                    <div class="empty-inline">
+                        <strong>Você ainda não publicou sugestões.</strong>
+                        <p>
+                            Comece indicando uma alternativa mais segura
+                            para um produto do catálogo.
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+{% else %}
+    <section class="dashboard-layout dashboard-layout--single">
+        <article class="content-panel">
+            <header class="panel-heading">
+                <div>
+                    <p class="overline">Acompanhamento do sistema</p>
+                    <h2>Alertas recentes</h2>
+                </div>
+                <a href="{% url 'saude:lista' 'alertas' %}" class="text-link">
+                    Ver todos
+                </a>
+            </header>
+
+            <div class="activity-list">
+                {% for item in atividades %}
+                    <div class="activity-item">
+                        <span class="activity-dot"></span>
+                        <div>
+                            <strong>
+                                {{ item.usuario.nome_completo|default:"Alerta" }}
+                            </strong>
+                            <p>{{ item.mensagem_alerta|default:item }}</p>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="empty-inline">
+                        <strong>Nenhum alerta recente.</strong>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+{% endif %}
 {% endblock %}

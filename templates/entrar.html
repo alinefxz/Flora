@@ -1,74 +1,68 @@
-{% load static %}
-<!doctype html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Entrar | FLORA</title>
+{% extends "auth_base.html" %}
 
-    <link rel="icon" href="{% static 'logoF.png' %}">
-    {% load static %}
-    <link rel="icon" href="{% static 'img/logoF.png' %}">
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=4">
-    <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=4">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}?v=4">
-    <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=4">
-</head>
-<body class="auth-page">
-    <header class="auth-topbar">
-        <div class="wordmark-crop">
-            <img src="{% static 'logoNome.png' %}" alt="Flora">
-        </div>
+{% block title %}Entrar | FLORA{% endblock %}
+{% block auth_mode %}auth-mode-login{% endblock %}
+
+{% block panel_kicker %}Seu mapa hormonal pessoal{% endblock %}
+{% block panel_title %}Cuidado começa quando a rotina fica mais clara.{% endblock %}
+{% block panel_text %}
+    Reúna produtos, sintomas e ciclos em um espaço acolhedor,
+    feito para ajudar você a perceber padrões com mais segurança.
+{% endblock %}
+
+{% block auth_content %}
+<div class="auth-form-wrap">
+    <header class="auth-heading">
+        <p class="overline">Acesso seguro</p>
+        <h2>Que bom ter você de volta.</h2>
+        <p>Entre com o e-mail usado no seu cadastro.</p>
     </header>
 
-    <main class="login-layout">
-        <section class="login-intro">
-            <p class="overline">Mapa hormonal pessoal</p>
-            <h1>Entenda melhor o que faz parte da sua rotina.</h1>
-            <p>
-                Produtos, exposição química, sintomas e ciclos reunidos
-                de maneira simples e cuidadosa.
-            </p>
-        </section>
+    {% if messages %}
+        <div class="auth-messages" role="status">
+            {% for message in messages %}
+                <div class="form-message">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
 
-        <section class="login-form">
-            <div class="form-heading">
-                <p class="overline">Acesso</p>
-                <h2>Entre na sua conta</h2>
-                <p>Use o e-mail informado no cadastro.</p>
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div class="field auth-field">
+            <label for="{{ form.email.id_for_label }}">E-mail</label>
+            <div class="input-with-icon">
+                <span aria-hidden="true">@</span>
+                {{ form.email }}
             </div>
+            {{ form.email.errors }}
+        </div>
 
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="form-message">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+        <div class="field auth-field">
+            <div class="field-label-row">
+                <label for="{{ form.senha.id_for_label }}">Senha</label>
+            </div>
+            <div class="input-with-icon input-password">
+                <span aria-hidden="true">•</span>
+                {{ form.senha }}
+            </div>
+            {{ form.senha.errors }}
+        </div>
 
-            <form method="post">
-                {% csrf_token %}
+        <button type="submit" class="primary-button auth-submit">
+            Entrar na Flora
+        </button>
+    </form>
 
-                <div class="field">
-                    <label for="{{ form.email.id_for_label }}">E-mail</label>
-                    {{ form.email }}
-                    {{ form.email.errors }}
-                </div>
-
-                <div class="field">
-                    <label for="{{ form.senha.id_for_label }}">Senha</label>
-                    {{ form.senha }}
-                    {{ form.senha.errors }}
-                </div>
-
-                <button type="submit" class="primary-button">
-                    Entrar
-                </button>
-            </form>
-
-            <p class="auth-switch">
-                Ainda não possui uma conta?
-                <a href="{% url 'saude:cadastrar' %}">Criar cadastro</a>
-            </p>
-        </section>
-    </main>
-</body>
-</html>
+    <div class="auth-switch-card">
+        <div>
+            <strong>Ainda não tem uma conta?</strong>
+            <span>Crie seu perfil de usuária ou especialista.</span>
+        </div>
+        <a href="{% url 'saude:cadastrar' %}" data-auth-switch>
+            Quero me cadastrar
+        </a>
+    </div>
+</div>
+{% endblock %}

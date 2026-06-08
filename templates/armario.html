@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Meu armário | FLORA{% endblock %}
+
+{% block content %}
+<header class="page-heading">
+    <p class="overline">Sua rotina de exposição</p>
+    <h1>Meu armário</h1>
+    <p>
+        Adicione o que você usa e informe a frequência. Esses dados
+        alimentam o cálculo do seu radar hormonal.
+    </p>
+</header>
+
+<section class="armario-layout">
+    <aside class="content-panel armario-form-panel">
+        <header class="panel-heading">
+            <div>
+                <p class="overline">Adicionar item</p>
+                <h2>Novo produto</h2>
+            </div>
+        </header>
+
+        <form method="post" action="{% url 'saude:adicionar_armario' %}"
+              class="stacked-form">
+            {% csrf_token %}
+            <div class="field">
+                <label for="{{ armario_form.produto.id_for_label }}">
+                    Produto
+                </label>
+                {{ armario_form.produto }}
+                {{ armario_form.produto.errors }}
+            </div>
+            <div class="field">
+                <label for="{{ armario_form.frequencia_uso.id_for_label }}">
+                    Frequência de uso
+                </label>
+                {{ armario_form.frequencia_uso }}
+                {{ armario_form.frequencia_uso.errors }}
+            </div>
+            <button type="submit" class="primary-button">
+                Adicionar ao armário
+            </button>
+        </form>
+
+        <a href="{% url 'saude:catalogo' %}" class="text-link">
+            Consultar o catálogo antes
+        </a>
+    </aside>
+
+    <section class="armario-items">
+        {% for item in itens_armario %}
+            <article class="armario-card">
+                <div class="armario-card-image">
+                    {% if item.produto.imagem %}
+                        <img src="{{ item.produto.imagem.url }}"
+                             alt="{{ item.produto.nome }}">
+                    {% else %}
+                        <span>{{ item.produto.nome|first|upper }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="armario-card-copy">
+                    <span class="tag">{{ item.produto.categoria.nome }}</span>
+                    <h2>
+                        <a href="{% url 'saude:produto_social' item.produto.pk %}">
+                            {{ item.produto.nome }}
+                        </a>
+                    </h2>
+                    <p>{{ item.produto.marca }}</p>
+
+                    <form method="post"
+                          action="{% url 'saude:atualizar_armario' item.pk %}"
+                          class="inline-update-form">
+                        {% csrf_token %}
+                        <label for="freq-{{ item.pk }}">Frequência</label>
+                        <select id="freq-{{ item.pk }}" name="frequencia_uso">
+                            <option value="3.0"
+                                {% if item.frequencia_uso == 3.0 %}selected{% endif %}>
+                                Diário
+                            </option>
+                            <option value="1.0"
+                                {% if item.frequencia_uso == 1.0 %}selected{% endif %}>
+                                Semanal
+                            </option>
+                            <option value="0.5"
+                                {% if item.frequencia_uso == 0.5 %}selected{% endif %}>
+                                Esporádico
+                            </option>
+                        </select>
+                        <button type="submit" class="secondary-button">
+                            Atualizar
+                        </button>
+                    </form>
+
+                    <form method="post"
+                          action="{% url 'saude:remover_armario' item.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="remove-button">
+                            Remover do armário
+                        </button>
+                    </form>
+                </div>
+
+                <div class="armario-score">
+                    <span>Nota Flora</span>
+                    <strong>{{ item.produto.nota_flora|floatformat:1 }}</strong>
+                </div>
+            </article>
+        {% empty %}
+            <div class="empty-state">
+                <strong>Seu armário ainda está vazio.</strong>
+                <p>Adicione o primeiro produto para iniciar seu radar.</p>
+            </div>
+        {% endfor %}
+    </section>
+</section>
+{% endblock %}

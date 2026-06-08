@@ -7,24 +7,24 @@ document.addEventListener("DOMContentLoaded", () => {
         "[data-specialist-fields]"
     );
 
+    if (!radios.length || !userFields || !specialistFields) return;
+
+    function setSectionState(section, disabled) {
+        section.hidden = disabled;
+        section.querySelectorAll("input, select, textarea")
+            .forEach(field => {
+                field.disabled = disabled;
+            });
+    }
+
     function toggleFields() {
         const selected = document.querySelector(
             'input[name="tipo_usuario"]:checked'
         );
         const specialist = selected?.value === "ESPECIALISTA";
 
-        userFields.hidden = specialist;
-        specialistFields.hidden = !specialist;
-
-        userFields.querySelectorAll("input, select, textarea")
-            .forEach(field => {
-                field.disabled = specialist;
-            });
-
-        specialistFields.querySelectorAll("input, select, textarea")
-            .forEach(field => {
-                field.disabled = !specialist;
-            });
+        setSectionState(userFields, specialist);
+        setSectionState(specialistFields, !specialist);
     }
 
     radios.forEach(radio => {
