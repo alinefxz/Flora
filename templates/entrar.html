@@ -1,54 +1,52 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Entrar | FLORA</title>
-    <link rel="icon" type="image/png" href="{% static 'logoF.png' %}">
-    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <link rel="icon" href="{% static 'logoF.png' %}">
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
 </head>
-<body class="auth-body">
-    <main class="auth-shell">
-        <section class="auth-brand">
-            <img src="{% static 'logoF.png' %}" alt="FLORA">
-            <h1>flora</h1>
-            <p>Um espaço leve para observar produtos, sintomas e sinais do corpo com mais clareza.</p>
-        </section>
+<body>
+<header class="auth-header">
+    <img src="{% static 'logoNome.png' %}" alt="Flora">
+</header>
 
-        <section class="auth-card">
-            <p class="eyebrow">Acesso</p>
-            <h2>Entre na sua conta</h2>
+<main class="auth-layout">
+    <section class="auth-intro">
+        <span>Seu mapa hormonal pessoal</span>
+        <h1>Observe sua rotina com mais clareza.</h1>
+        <p>Produtos, ciclos e sintomas reunidos em um acompanhamento cuidadoso.</p>
+    </section>
 
-            {% if messages %}
-                <div class="messages">
-                    {% for message in messages %}
-                        <div class="message">{{ message }}</div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+    <section class="auth-form">
+        <p class="eyebrow">Bem-vinda de volta</p>
+        <h2>Entre na sua conta</h2>
 
-            <form method="post" class="flora-form">
-                {% csrf_token %}
+        {% for message in messages %}
+            <div class="auth-message">{{ message }}</div>
+        {% endfor %}
 
-                {% for field in form %}
-                    <div class="form-field">
-                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                        {{ field }}
-                        {% for error in field.errors %}
-                            <small class="error">{{ error }}</small>
-                        {% endfor %}
-                    </div>
-                {% endfor %}
+        <form method="post">
+            {% csrf_token %}
 
-                <button type="submit" class="btn-primary">Entrar</button>
-            </form>
+            <label for="{{ form.email.id_for_label }}">E-mail</label>
+            {{ form.email }}
+            {{ form.email.errors }}
 
-            <p class="auth-note">
-                Ainda não tem conta?
-                <a href="{% url 'saude:cadastrar' %}">Criar cadastro</a>
-            </p>
-        </section>
-    </main>
+            <label for="{{ form.senha.id_for_label }}">Senha</label>
+            {{ form.senha }}
+            {{ form.senha.errors }}
+
+            <button type="submit">Entrar</button>
+        </form>
+
+        <p class="auth-switch">
+            Ainda não possui uma conta?
+            <a href="{% url 'saude:cadastrar' %}">Cadastre-se</a>
+        </p>
+    </section>
+</main>
 </body>
 </html>

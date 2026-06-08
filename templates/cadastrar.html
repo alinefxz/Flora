@@ -1,51 +1,100 @@
 {% load static %}
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastrar | FLORA</title>
-    <link rel="icon" type="image/png" href="{% static 'logoF.png' %}">
-    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cadastro | FLORA</title>
+    <link rel="icon" href="{% static 'logoF.png' %}">
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
 </head>
-<body class="auth-body">
-    <main class="auth-shell wide-auth">
-        <section class="auth-brand">
-            <img src="{% static 'logoF.png' %}" alt="FLORA">
-            <h1>flora</h1>
-            <p>Cadastre seu perfil para acompanhar exposição hormonal, ciclos e sintomas de forma organizada.</p>
-        </section>
+<body>
+<header class="auth-header">
+    <img src="{% static 'logoNome.png' %}" alt="Flora">
+</header>
 
-        <section class="auth-card">
-            <p class="eyebrow">Cadastro</p>
-            <h2>Crie sua conta</h2>
+<main class="signup-layout">
+    <section class="signup-heading">
+        <span>Cadastro FLORA</span>
+        <h1>Comece seu acompanhamento.</h1>
+        <p>Escolha o perfil correspondente. Administradores não podem ser criados por esta página.</p>
+    </section>
 
-            <form method="post" enctype="multipart/form-data" class="flora-form">
-                {% csrf_token %}
+    <form method="post" enctype="multipart/form-data" class="signup-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
 
-                <div class="form-grid">
-                    {% for field in form %}
-                        <div class="form-field {% if field.field.widget.input_type == 'checkbox' %}checkbox-field{% endif %}">
-                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                            {{ field }}
+        <fieldset>
+            <legend>Como você usará o FLORA?</legend>
+            <div class="profile-options">{{ form.tipo_usuario }}</div>
+            {{ form.tipo_usuario.errors }}
+        </fieldset>
 
-                            {% if field.help_text %}
-                                <small>{{ field.help_text }}</small>
-                            {% endif %}
+        <fieldset>
+            <legend>Dados pessoais</legend>
+            <div class="field-grid">
+                <div><label>Nome completo</label>{{ form.nome_completo }}{{ form.nome_completo.errors }}</div>
+                <div><label>E-mail</label>{{ form.email }}{{ form.email.errors }}</div>
+                <div><label>CPF</label>{{ form.cpf }}{{ form.cpf.errors }}</div>
+                <div><label>Data de nascimento</label>{{ form.data_nasc }}{{ form.data_nasc.errors }}</div>
+                <div><label>Cidade</label>{{ form.cidade }}{{ form.cidade.errors }}</div>
+            </div>
+        </fieldset>
 
-                            {% for error in field.errors %}
-                                <small class="error">{{ error }}</small>
-                            {% endfor %}
-                        </div>
-                    {% endfor %}
-                </div>
+        <fieldset id="usuario-fields">
+            <legend>Perfil de usuária</legend>
+            <div class="field-grid">
+                <div><label>Apelido</label>{{ form.apelido }}</div>
+                <div><label>Foto de perfil</label>{{ form.foto_perfil }}</div>
+            </div>
+        </fieldset>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Cadastrar</button>
-                    <a href="{% url 'saude:entrar' %}" class="btn-ghost">Já tenho conta</a>
-                </div>
-            </form>
-        </section>
-    </main>
+        <fieldset id="especialista-fields" hidden>
+            <legend>Dados profissionais</legend>
+            <div class="field-grid">
+                <div><label>Registro profissional</label>{{ form.registro_profissional }}</div>
+                <div><label>Especialidade</label>{{ form.especialidade }}</div>
+                <div class="field-wide"><label>Biografia</label>{{ form.biografia }}</div>
+            </div>
+            <small>Informe CRM, CRF, CRQ ou outro registro profissional válido.</small>
+        </fieldset>
+
+        <fieldset>
+            <legend>Segurança</legend>
+            <div class="field-grid">
+                <div><label>Senha</label>{{ form.senha }}{{ form.senha.errors }}</div>
+                <div><label>Confirmar senha</label>{{ form.confirmar_senha }}{{ form.confirmar_senha.errors }}</div>
+            </div>
+        </fieldset>
+
+        <div class="signup-actions">
+            <button type="submit">Criar conta</button>
+            <a href="{% url 'saude:entrar' %}">Já tenho conta</a>
+        </div>
+    </form>
+</main>
+
+<script>
+const radios = document.querySelectorAll('[name="tipo_usuario"]');
+const usuario = document.querySelector('#usuario-fields');
+const especialista = document.querySelector('#especialista-fields');
+
+function atualizarPerfil() {
+    const tipo = document.querySelector('[name="tipo_usuario"]:checked')?.value;
+    const profissional = tipo === 'ESPECIALISTA';
+
+    especialista.hidden = !profissional;
+    usuario.hidden = profissional;
+
+    especialista.querySelectorAll('input, textarea, select')
+        .forEach(campo => campo.disabled = !profissional);
+
+    usuario.querySelectorAll('input, textarea, select')
+        .forEach(campo => campo.disabled = profissional);
+}
+
+radios.forEach(radio => radio.addEventListener('change', atualizarPerfil));
+atualizarPerfil();
+</script>
 </body>
 </html>
