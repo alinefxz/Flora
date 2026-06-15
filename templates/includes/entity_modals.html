@@ -1,0 +1,197 @@
+<dialog class="flora-modal" data-city-modal>
+    <form method="post"
+          action="/usuarios/cidades/cadastrar/"
+          class="modal-card"
+          data-city-form>
+        <header class="modal-heading">
+            <div>
+                <p class="overline">Cidade não encontrada</p>
+                <h2>Adicionar cidade</h2>
+                <p>
+                    A Flora confere o nome na lista oficial do
+                    IBGE antes de incluir a cidade.
+                </p>
+            </div>
+
+            <button type="button"
+                    class="modal-close"
+                    data-modal-close
+                    aria-label="Fechar">
+                ×
+            </button>
+        </header>
+
+        <div class="form-grid">
+            <div class="field">
+                <label for="city-uf">Estado</label>
+                <select id="city-uf"
+                        name="uf"
+                        required
+                        data-smart-select
+                        data-search-placeholder="Pesquise o estado">
+                    <option value="">Selecione o estado</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="city-name">Nome da cidade</label>
+                <input id="city-name"
+                       name="nome_cidade"
+                       required
+                       autocomplete="address-level2"
+                       placeholder="Ex.: São José dos Campos">
+            </div>
+        </div>
+
+        <p class="modal-status"
+           data-city-status
+           aria-live="polite"></p>
+
+        <footer class="modal-actions">
+            <button type="button"
+                    class="secondary-button"
+                    data-modal-close>
+                Cancelar
+            </button>
+
+            <button type="submit" class="primary-button">
+                Conferir e adicionar
+            </button>
+        </footer>
+    </form>
+</dialog>
+
+
+<dialog class="flora-modal flora-modal--wide"
+        data-product-modal>
+    <form method="post"
+          enctype="multipart/form-data"
+          action="/produtos/cadastrar/"
+          class="modal-card"
+          data-product-form
+          data-verify-url="/produtos/verificar/">
+        <header class="modal-heading">
+            <div>
+                <p class="overline">Produto não encontrado</p>
+                <h2>Cadastrar produto</h2>
+                <p>
+                    Primeiro conferimos o código da embalagem.
+                    Somente produtos confirmados na base pública
+                    podem ser cadastrados.
+                </p>
+            </div>
+
+            <button type="button"
+                    class="modal-close"
+                    data-modal-close
+                    aria-label="Fechar">
+                ×
+            </button>
+        </header>
+
+        <section class="product-verify-row">
+            <div class="field">
+                <label for="product-barcode">
+                    Código de barras GTIN/EAN
+                </label>
+
+                <input id="product-barcode"
+                       name="codigo_barras"
+                       inputmode="numeric"
+                       maxlength="14"
+                       required
+                       placeholder="Digite apenas os números">
+            </div>
+
+            <button type="button"
+                    class="secondary-button"
+                    data-product-verify>
+                Verificar produto
+            </button>
+        </section>
+
+        <div class="product-modal-layout"
+             data-product-details
+             hidden>
+            <label class="product-upload-card"
+                   for="product-image">
+                <span class="product-upload-preview"
+                      data-product-preview>
+                    <span>Foto do produto</span>
+                </span>
+
+                <strong>Adicionar uma foto melhor</strong>
+                <small>JPG, PNG ou WebP</small>
+
+                <input id="product-image"
+                       name="imagem"
+                       type="file"
+                       accept="image/png,image/jpeg,image/webp">
+            </label>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label for="product-name">Nome</label>
+                    <input id="product-name"
+                           name="nome"
+                           required>
+                </div>
+
+                <div class="field">
+                    <label for="product-brand">Marca</label>
+                    <input id="product-brand"
+                           name="marca"
+                           required>
+                </div>
+
+                <div class="field">
+                    <label for="product-category">Categoria</label>
+                    <select id="product-category"
+                            name="categoria"
+                            required
+                            data-smart-select
+                            data-search-placeholder="Pesquise a categoria">
+                        <option value="">
+                            Selecione a categoria
+                        </option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="product-maker">Fabricante</label>
+                    <input id="product-maker"
+                           name="fabricante">
+                </div>
+
+                <div class="field field-wide">
+                    <label for="product-description">
+                        Descrição
+                    </label>
+                    <textarea id="product-description"
+                              name="descricao"
+                              rows="3"
+                              placeholder="Informações úteis da embalagem"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <p class="modal-status"
+           data-product-status
+           aria-live="polite"></p>
+
+        <footer class="modal-actions">
+            <button type="button"
+                    class="secondary-button"
+                    data-modal-close>
+                Cancelar
+            </button>
+
+            <button type="submit"
+                    class="primary-button"
+                    data-product-submit
+                    disabled>
+                Cadastrar e selecionar
+            </button>
+        </footer>
+    </form>
+</dialog>

@@ -26,11 +26,11 @@ from .models import ArmarioItem
 from .social_forms import (
     ArmarioRapidoForm,
     ComentarioProdutoForm,
+    PerfilAdminForm,
     PerfilEspecialistaForm,
     PerfilUsuarioForm,
     SugestaoEspecialistaForm,
 )
-
 
 def somente_usuaria(request):
     if perfil_usuario(request.user) != USUARIA:
@@ -263,10 +263,17 @@ def remover_armario(request, pk):
 def perfil(request):
     tipo = perfil_usuario(request.user)
 
-    if tipo == ESPECIALISTA:
-        form_class = PerfilEspecialistaForm
-    else:
-        form_class = PerfilUsuarioForm
+    formularios = {
+        ESPECIALISTA: PerfilEspecialistaForm,
+        ADMIN: PerfilAdminForm,
+    }
+
+    form_class = formularios.get(
+        tipo,
+        PerfilUsuarioForm,
+    )
+
+    foto_anterior = request.user.foto_perfil.name
 
     form = form_class(
         request.POST or None,
@@ -274,29 +281,71 @@ def perfil(request):
         instance=request.user,
     )
 
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Perfil atualizado.")
-        return redirect("saude:perfil")
+    if request.method == "POST":
+        if form.is_valid():
+            pessoa = form.save(commit=False)
+
+            # Preserva a foto já salva quando nenhuma nova for enviada.
+            if (
+                not request.FILES.get("foto_perfil")
+                and foto_anterior
+            ):
+                pessoa.foto_perfil.name = foto_anterior
+
+            pessoa.save()
+            form.save_m2m()
+
+            # Recarrega cidade, foto e demais dados depois do salvamento.
+            request.user.refresh_from_db()
+
+            messages.success(
+                request,
+                (
+                    "Perfil atualizado. "
+                    "Suas informações foram salvas."
+                ),
+            )
+
+            return redirect("saude:perfil")
+
+        messages.error(
+            request,
+            (
+                "Não foi possível salvar. "
+                "Confira os campos destacados."
+            ),
+        )
 
     contexto = contexto_base(request)
+
     contexto.update({
         "perfil": request.user,
         "perfil_form": form,
         "perfil_proprio": True,
-        "sugestoes_perfil": SugestaoTroca.objects.filter(
-            especialista=request.user
-        ).select_related(
-            "produto_risco",
-            "produto_seguro",
-        ) if tipo == ESPECIALISTA else None,
-        "comentarios_perfil": request.user.comentarios_produtos.filter(
-            ativo=True
-        ).select_related("produto") if tipo == ESPECIALISTA else None,
+        "sugestoes_perfil": (
+            SugestaoTroca.objects.filter(
+                especialista=request.user
+            ).select_related(
+                "produto_risco",
+                "produto_seguro",
+            )
+            if tipo == ESPECIALISTA
+            else None
+        ),
+        "comentarios_perfil": (
+            request.user.comentarios_produtos.filter(
+                ativo=True
+            ).select_related("produto")
+            if tipo == ESPECIALISTA
+            else None
+        ),
     })
 
-    return render(request, "perfil.html", contexto)
-
+    return render(
+        request,
+        "perfil.html",
+        contexto,
+    )
 
 @login_required(login_url="saude:entrar")
 def perfil_especialista(request, pk):

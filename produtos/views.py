@@ -1,6 +1,15 @@
 from django.http import JsonResponse
 from .models import Categoria, Produto, Substancia, SugestaoTroca, TipoDesregulador
+from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError, transaction
+from django.views.decorators.http import require_GET, require_POST
 
+from .services import (
+    ServicoProdutosIndisponivel,
+    consultar_produto_publico,
+    gtin_valido,
+    limpar_codigo_barras,
+)
 
 def listar_categorias(request):
     dados = [
@@ -96,3 +105,204 @@ def listar_sugestoes(request):
         for s in sugestoes
     ]
     return JsonResponse({"sugestoes": dados})
+
+def produto_json(produto, origem="flora"):
+    return {
+        "id": produto.pk,
+        "nome": produto.nome,
+        "marca": produto.marca,
+        "codigo_barras": produto.codigo_barras,
+        "categoria": produto.categoria.nome,
+        "fabricante": produto.fabricante,
+        "imagem": (
+            produto.imagem.url
+            if produto.imagem
+            else ""
+        ),
+        "origem": origem,
+    }
+
+
+@require_GET
+@login_required
+def verificar_produto(request):
+    codigo = limpar_codigo_barras(
+        request.GET.get("codigo_barras")
+    )
+
+    existente = Produto.objects.select_related(
+        "categoria"
+    ).filter(
+        codigo_barras=codigo
+    ).first()
+
+    if existente:
+        return JsonResponse({
+            "encontrado": True,
+            "ja_cadastrado": True,
+            "produto": produto_json(existente),
+        })
+
+    if not gtin_valido(codigo):
+        return JsonResponse(
+            {
+                "erro": (
+                    "O código informado não é um GTIN/EAN válido. "
+                    "Confira os números da embalagem."
+                )
+            },
+            status=400,
+        )
+
+    try:
+        produto = consultar_produto_publico(codigo)
+    except ServicoProdutosIndisponivel:
+        return JsonResponse(
+            {
+                "erro": (
+                    "A base pública de produtos está indisponível. "
+                    "Tente novamente em alguns instantes."
+                )
+            },
+            status=503,
+        )
+
+    if not produto:
+        return JsonResponse(
+            {
+                "erro": (
+                    "O código é válido, mas o produto não foi "
+                    "encontrado na base pública de cosméticos."
+                )
+            },
+            status=404,
+        )
+
+    return JsonResponse({
+        "encontrado": True,
+        "ja_cadastrado": False,
+        "produto": {
+            **produto,
+            "origem": "Open Beauty Facts",
+        },
+    })
+
+
+@require_POST
+@login_required
+def cadastrar_produto(request):
+    codigo = limpar_codigo_barras(
+        request.POST.get("codigo_barras")
+    )
+
+    existente = Produto.objects.select_related(
+        "categoria"
+    ).filter(
+        codigo_barras=codigo
+    ).first()
+
+    if existente:
+        return JsonResponse({
+            "ja_cadastrado": True,
+            "produto": produto_json(existente),
+        })
+
+    if not gtin_valido(codigo):
+        return JsonResponse(
+            {"erro": "Informe um código GTIN/EAN válido."},
+            status=400,
+        )
+
+    try:
+        origem = consultar_produto_publico(codigo)
+    except ServicoProdutosIndisponivel:
+        return JsonResponse(
+            {"erro": "Não foi possível validar o produto agora."},
+            status=503,
+        )
+
+    if not origem:
+        return JsonResponse(
+            {
+                "erro": (
+                    "Produto não confirmado na base pública. "
+                    "O cadastro não foi realizado."
+                )
+            },
+            status=400,
+        )
+
+    try:
+        categoria = Categoria.objects.get(
+            pk=request.POST.get("categoria")
+        )
+    except (Categoria.DoesNotExist, ValueError, TypeError):
+        return JsonResponse(
+            {"erro": "Selecione uma categoria válida."},
+            status=400,
+        )
+
+    nome = (
+        origem["nome"]
+        or request.POST.get("nome", "")
+    ).strip()
+
+    marca = (
+        origem["marca"]
+        or request.POST.get("marca", "")
+    ).strip()
+
+    if not nome or not marca:
+        return JsonResponse(
+            {
+                "erro": (
+                    "Preencha o nome e a marca do produto."
+                )
+            },
+            status=400,
+        )
+
+    semelhante = Produto.objects.select_related(
+        "categoria"
+    ).filter(
+        nome__iexact=nome,
+        marca__iexact=marca,
+    ).first()
+
+    if semelhante:
+        return JsonResponse({
+            "ja_cadastrado": True,
+            "produto": produto_json(semelhante),
+        })
+
+    try:
+        with transaction.atomic():
+            produto = Produto.objects.create(
+                nome=nome,
+                marca=marca,
+                codigo_barras=codigo,
+                imagem=request.FILES.get("imagem"),
+                categoria=categoria,
+                fabricante=(
+                    origem["fabricante"]
+                    or request.POST.get("fabricante", "")
+                ).strip(),
+                descricao=request.POST.get(
+                    "descricao", ""
+                ).strip(),
+            )
+
+    except IntegrityError:
+        produto = Produto.objects.select_related(
+            "categoria"
+        ).get(
+            codigo_barras=codigo
+        )
+
+    return JsonResponse(
+        {
+            "ja_cadastrado": False,
+            "produto": produto_json(produto),
+        },
+        status=201,
+    )

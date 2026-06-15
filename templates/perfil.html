@@ -4,13 +4,14 @@
 {% block title %}{{ perfil.nome_completo }} | FLORA{% endblock %}
 
 {% block content %}
-<section class="profile-hero profile-hero--{{ perfil.tipo_usuario|lower }}">
+<section class="profile-hero profile-hero--{{ perfil.tipo_usuario|lower }}" data-profile-hero>
     <div class="profile-avatar-wrap">
         <span class="avatar profile-avatar avatar--{{ perfil.tipo_usuario|lower }}"
               {% if perfil_proprio %}data-avatar-preview{% endif %}>
-            {% if perfil.foto_perfil %}
-                <img src="{{ perfil.foto_perfil.url }}"
-                     alt="Foto de {{ perfil.nome_completo }}">
+              {% if perfil.foto_perfil %}
+              <img src="{{ perfil.foto_perfil.url }}"
+                   data-profile-palette-source
+                   alt="Foto de {{ perfil.nome_completo }}">
             {% else %}
                 {{ perfil.nome_completo|first|upper }}
             {% endif %}
@@ -78,8 +79,10 @@
 
             <div class="form-grid">
                 {% for field in perfil_form %}
-                    <div class="field
-                        {% if field|widget_type == 'textarea' %}field-wide{% endif %}">
+                <div class="field
+                    {% if field|widget_type == 'textarea' or field.name == 'foto_perfil' %}
+                        field-wide
+                    {% endif %}">
                         <label for="{{ field.id_for_label }}">
                             {{ field.label }}
                         </label>

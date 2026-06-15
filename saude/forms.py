@@ -71,6 +71,20 @@ class FloraModelForm(forms.ModelForm):
                 field.disabled = True
                 field.required = False
 
+            if isinstance(field.widget, forms.Select):
+                field.widget.attrs.update({
+                    "data-smart-select": "",
+                    "data-search-placeholder": (
+                        f"Pesquise por {field.label.lower()}"
+                    ),
+                })
+
+            if name == "cidade":
+                field.widget.attrs.update({
+                    "data-create-kind": "city",
+                    "data-search-placeholder": "Digite o nome da cidade",
+                })
+
 
 class LoginForm(forms.Form):
     email = forms.EmailField(

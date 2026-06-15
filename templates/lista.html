@@ -32,7 +32,18 @@
 
 <section class="record-list">
     {% for objeto in objetos %}
-        <article class="record-row">
+        <article class="record-row
+        {% if slug == 'produtos' %}record-row--product{% endif %}">
+        {% if slug == "produtos" %}
+        <div class="record-product-image">
+            {% if objeto.imagem %}
+                <img src="{{ objeto.imagem.url }}"
+                    alt="{{ objeto.nome }}">
+            {% else %}
+                <span>{{ objeto.nome|first|upper }}</span>
+            {% endif %}
+        </div>
+    {% endif %}
             <header class="record-title">
                 <strong>{{ objeto }}</strong>
                 <span>#{{ objeto.pk }}</span>

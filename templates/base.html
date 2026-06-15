@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="{% static 'css/social.css' %}?v=5">
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="{% static 'js/app.js' %}?v=5" defer></script>
+    <script src="{% static 'js/smart-fields.js' %}?v=6" defer></script>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -160,5 +161,7 @@
 
         {% block content %}{% endblock %}
     </main>
+    
+    {% include "includes/entity_modals.html" %}
 </body>
 </html>

@@ -28,7 +28,22 @@
                 <label for="{{ armario_form.produto.id_for_label }}">
                     Produto
                 </label>
-                {{ armario_form.produto }}
+                <div class="product-picker" data-product-picker>
+                    <span class="product-picker-preview"
+                          data-product-picker-preview>
+                        +
+                    </span>
+                
+                    <div class="product-picker-field">
+                        {{ armario_form.produto }}
+                
+                        <small>
+                            Pesquise no catálogo ou cadastre pelo código
+                            da embalagem.
+                        </small>
+                    </div>
+                </div>
+                
                 {{ armario_form.produto.errors }}
             </div>
             <div class="field">

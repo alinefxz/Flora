@@ -4,6 +4,14 @@ from django.urls import reverse
 from produtos.models import Categoria, Produto, SugestaoTroca
 from usuarios.models import Pessoa
 
+import base64
+import tempfile
+from unittest.mock import patch
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+from produtos.services import gtin_valido
+from usuarios.models import Cidade, UF
 
 class SocialExperienceTests(TestCase):
     @classmethod
@@ -53,6 +61,25 @@ class SocialExperienceTests(TestCase):
             produto_seguro=cls.produto_seguro,
             justificativa_tecnica="Alternativa com menor carga de risco.",
             especialista=cls.especialista,
+        )
+        cls.sp = UF.objects.create(
+            nome_estado="São Paulo",
+            sigla="SP",
+        )
+
+        cls.rj = UF.objects.create(
+            nome_estado="Rio de Janeiro",
+            sigla="RJ",
+        )
+
+        cls.sao_paulo = Cidade.objects.create(
+            nome_cidade="São Paulo",
+            uf=cls.sp,
+        )
+
+        cls.niteroi = Cidade.objects.create(
+            nome_cidade="Niterói",
+            uf=cls.rj,
         )
 
     def test_login_exibe_logo_e_chamada_de_cadastro(self):
@@ -109,3 +136,93 @@ class SocialExperienceTests(TestCase):
 
         self.assertContains(response, "Área profissional")
         self.assertNotContains(response, 'id="radarChart"')
+
+def test_perfil_salva_cidade_e_preserva_foto(self):
+    self.client.force_login(self.usuaria)
+
+    png = base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwC"
+        "AAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    )
+
+    with tempfile.TemporaryDirectory() as media_root:
+        with self.settings(MEDIA_ROOT=media_root):
+            response = self.client.post(
+                reverse("saude:perfil"),
+                {
+                    "nome_completo": self.usuaria.nome_completo,
+                    "apelido": "Ana",
+                    "data_nasc": "",
+                    "cidade": self.sao_paulo.pk,
+                    "foto_perfil": SimpleUploadedFile(
+                        "perfil.png",
+                        png,
+                        content_type="image/png",
+                    ),
+                },
+            )
+
+            self.assertRedirects(
+                response,
+                reverse("saude:perfil"),
+            )
+
+            self.usuaria.refresh_from_db()
+            foto_salva = self.usuaria.foto_perfil.name
+
+            response = self.client.post(
+                reverse("saude:perfil"),
+                {
+                    "nome_completo": self.usuaria.nome_completo,
+                    "apelido": "Ana",
+                    "data_nasc": "",
+                    "cidade": self.niteroi.pk,
+                },
+            )
+
+            self.assertRedirects(
+                response,
+                reverse("saude:perfil"),
+            )
+
+            self.usuaria.refresh_from_db()
+
+            self.assertEqual(
+                self.usuaria.cidade,
+                self.niteroi,
+            )
+            self.assertEqual(
+                self.usuaria.foto_perfil.name,
+                foto_salva,
+            )
+
+
+@patch("usuarios.views.validar_municipio_ibge")
+def test_cidade_e_validada_antes_do_cadastro(
+    self,
+    validar,
+):
+    validar.return_value = {
+        "id_ibge": 3303302,
+        "nome": "Niterói",
+    }
+
+    response = self.client.post(
+        reverse("usuarios:cadastrar_cidade"),
+        {
+            "uf": self.rj.pk,
+            "nome_cidade": "niteroi",
+        },
+    )
+
+    self.assertEqual(response.status_code, 201)
+    validar.assert_called_once_with("niteroi", "RJ")
+
+
+def test_codigo_gtin_inventado_e_rejeitado(self):
+    self.assertTrue(
+        gtin_valido("3017620422003")
+    )
+    self.assertFalse(
+        gtin_valido("3017620422004")
+    )

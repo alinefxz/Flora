@@ -28,19 +28,34 @@
     <div class="form-grid">
         {% for field in form %}
             <div class="field
-                {% if field|widget_type == 'textarea' %}field-wide{% endif %}
-                {% if field|widget_type == 'checkboxinput' %}checkbox-field{% endif %}">
+            {% if field|widget_type == 'textarea' %}field-wide{% endif %}
+            {% if field|widget_type == 'checkboxinput' %}checkbox-field{% endif %}
+            {% if field.name == 'imagem' %}field-wide product-image-field{% endif %}">
                 {% if field|widget_type == 'checkboxinput' %}
-                    {{ field }}
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                {% else %}
-                    <label for="{{ field.id_for_label }}">
-                        {{ field.label }}
-                        {% if field.field.required %}
-                            <span class="required-mark" aria-hidden="true">*</span>
+                {% if field.name == "imagem" %}
+                <div class="product-image-input">
+                    <span class="product-form-preview"
+                          data-file-preview>
+                        {% if form.instance.imagem %}
+                            <img src="{{ form.instance.imagem.url }}"
+                                 alt="Foto atual do produto">
+                        {% else %}
+                            <span>Prévia da foto</span>
                         {% endif %}
-                    </label>
-                    {{ field }}
+                    </span>
+            
+                    <div>
+                        {{ field }}
+            
+                        <small>
+                            Uma foto frontal ajuda a reconhecer o
+                            produto no catálogo e no armário.
+                        </small>
+                    </div>
+                </div>
+            {% else %}
+                {{ field }}
+            {% endif %}
                 {% endif %}
 
                 {% if field.help_text %}

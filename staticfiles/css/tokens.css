@@ -1,0 +1,92 @@
+:root {
+    --dark-green: #0a3323;
+    --dark-green-2: #124b37;
+    --moss-green: #839958;
+    --moss-light: #b8c98c;
+    --cream: #f7f4d5;
+    --rosy: #d3968c;
+    --water: #105666;
+    --water-light: #2d7885;
+
+    --surface: #fffef4;
+    --surface-strong: #ffffff;
+    --ink: #14271e;
+    --muted: #66736b;
+    --line: rgba(10, 51, 35, .13);
+    --line-strong: rgba(10, 51, 35, .22);
+    --soft-green: rgba(131, 153, 88, .15);
+    --soft-rose: rgba(211, 150, 140, .18);
+    --soft-water: rgba(16, 86, 102, .12);
+    --shadow-sm: 0 10px 28px rgba(10, 51, 35, .07);
+    --shadow: 0 24px 65px rgba(10, 51, 35, .11);
+
+    --font-display: Georgia, "Times New Roman", serif;
+    --font-body: "Segoe UI", Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    color-scheme: light;
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--ink);
+    background:
+        radial-gradient(circle at 5% 4%, rgba(131, 153, 88, .16), transparent 24rem),
+        radial-gradient(circle at 94% 18%, rgba(211, 150, 140, .15), transparent 27rem),
+        var(--cream);
+    font-family: var(--font-body);
+    line-height: 1.5;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+button,
+a {
+    -webkit-tap-highlight-color: transparent;
+}
+
+a {
+    color: var(--water);
+    text-decoration: none;
+}
+
+img {
+    max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+p {
+    margin-top: 0;
+}
+
+h1,
+h2,
+h3 {
+    color: var(--dark-green);
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -.025em;
+}
+
+.overline {
+    margin-bottom: 8px;
+    color: var(--rosy);
+    font-size: .75rem;
+    font-weight: 850;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
