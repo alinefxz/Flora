@@ -3,6 +3,7 @@
           action="/usuarios/cidades/cadastrar/"
           class="modal-card"
           data-city-form>
+        {% csrf_token %}
         <header class="modal-heading">
             <div>
                 <p class="overline">Cidade não encontrada</p>
@@ -70,6 +71,7 @@
           class="modal-card"
           data-product-form
           data-verify-url="/produtos/verificar/">
+        {% csrf_token %}
         <header class="modal-heading">
             <div>
                 <p class="overline">Produto não encontrado</p>
