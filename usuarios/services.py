@@ -18,12 +18,13 @@ class ServicoMunicipiosIndisponivel(Exception):
 
 def normalizar_texto(valor):
     texto = unicodedata.normalize("NFKD", (valor or "").strip())
-
-    return "".join(
+    texto = "".join(
         caractere
         for caractere in texto
         if not unicodedata.combining(caractere)
-    ).casefold()
+    )
+
+    return " ".join(texto.split()).casefold()
 
 
 def municipios_oficiais(uf):
