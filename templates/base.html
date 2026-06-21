@@ -8,13 +8,13 @@
     <title>{% block title %}FLORA{% endblock %}</title>
 
     <link rel="icon" type="image/png" href="{% static 'img/logoF.png' %}">
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=5">
-    <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=5">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}?v=5">
-    <link rel="stylesheet" href="{% static 'css/social.css' %}?v=5">
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=9">
+    <link rel="stylesheet" href="{% static 'css/layout.css' %}?v=9">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}?v=9">
+    <link rel="stylesheet" href="{% static 'css/social.css' %}?v=9">
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <script src="{% static 'js/app.js' %}?v=5" defer></script>
-    <script src="{% static 'js/smart-fields.js' %}?v=6" defer></script>
+    <script src="{% static 'js/app.js' %}?v=9" defer></script>
+    <script src="{% static 'js/smart-fields.js' %}?v=9" defer></script>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -161,7 +161,7 @@
 
         {% block content %}{% endblock %}
     </main>
-    
+
     {% include "includes/entity_modals.html" %}
 </body>
 </html>
