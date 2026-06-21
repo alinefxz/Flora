@@ -20,7 +20,7 @@ class UFAdmin(admin.ModelAdmin):
 class CidadeAdmin(admin.ModelAdmin):
     list_display = ("nome_cidade", "uf")
     list_filter = ("uf",)
-    search_fields = ("nome_cidade",)
+    search_fields = ("nome_cidade", "uf__sigla", "uf__nome_estado")
 
 
 class PerfilHormonalInline(admin.StackedInline):
@@ -41,11 +41,13 @@ class RegistroSintomaInline(admin.TabularInline):
     ordering = ("-data_ocorrencia",)
     autocomplete_fields = ["sintoma"]
 
+
 class CicloMenstrualInline(admin.TabularInline):
     model = CicloMenstrual
     extra = 1
     fields = ("data_inicio", "data_fim", "duracao", "observacoes")
     ordering = ("-data_inicio",)
+
 
 class AlertaRiscoInline(admin.TabularInline):
     model = AlertaRisco
@@ -54,17 +56,58 @@ class AlertaRiscoInline(admin.TabularInline):
 
 
 class PessoaAdminBase(UserAdmin):
-    list_display = ("email", "nome_completo", "tipo_usuario", "ativo", "is_staff")
-    list_filter = ("tipo_usuario", "ativo", "is_staff")
-    search_fields = ("email", "username", "nome_completo", "cpf")
+    list_display = (
+        "email",
+        "nome_completo",
+        "tipo_usuario",
+        "cidade",
+        "data_nasc",
+        "ativo",
+        "is_staff",
+    )
+    list_filter = ("tipo_usuario", "ativo", "is_staff", "cidade__uf")
+    search_fields = (
+        "email",
+        "username",
+        "nome_completo",
+        "cpf",
+        "cidade__nome_cidade",
+    )
     ordering = ("email",)
 
     fieldsets = UserAdmin.fieldsets + (
-        ("Dados Flora", {"fields": ("nome_completo", "cpf", "data_nasc", "tipo_usuario", "cidade", "ativo")}),
+        (
+            "Dados Flora",
+            {
+                "fields": (
+                    "nome_completo",
+                    "cpf",
+                    "data_nasc",
+                    "cidade",
+                    "foto_perfil",
+                    "ativo",
+                )
+            },
+        ),
+        ("Perfil Flora", {"fields": ("tipo_usuario",)}),
     )
 
     add_fieldsets = UserAdmin.add_fieldsets + (
-        ("Dados Flora", {"fields": ("email", "nome_completo", "cpf", "tipo_usuario", "cidade", "ativo")}),
+        (
+            "Dados Flora",
+            {
+                "fields": (
+                    "email",
+                    "nome_completo",
+                    "cpf",
+                    "data_nasc",
+                    "tipo_usuario",
+                    "cidade",
+                    "foto_perfil",
+                    "ativo",
+                )
+            },
+        ),
     )
 
 
@@ -76,21 +119,30 @@ class PessoaAdmin(PessoaAdminBase):
 @admin.register(Usuario)
 class UsuarioAdmin(PessoaAdminBase):
     fieldsets = PessoaAdminBase.fieldsets + (
-        ("Perfil de usuária", {"fields": ("apelido", "foto_perfil")}),
+        ("Perfil de usuária", {"fields": ("apelido",)}),
     )
     inlines = [
-    PerfilHormonalInline,
-    CicloMenstrualInline,
-    ArmarioItemInline,
-    RegistroSintomaInline,
-    AlertaRiscoInline,
+        PerfilHormonalInline,
+        CicloMenstrualInline,
+        ArmarioItemInline,
+        RegistroSintomaInline,
+        AlertaRiscoInline,
     ]
 
 
 @admin.register(Especialista)
 class EspecialistaAdmin(PessoaAdminBase):
     fieldsets = PessoaAdminBase.fieldsets + (
-        ("Dados profissionais", {"fields": ("registro_profissional", "especialidade", "biografia")}),
+        (
+            "Dados profissionais",
+            {
+                "fields": (
+                    "registro_profissional",
+                    "especialidade",
+                    "biografia",
+                )
+            },
+        ),
     )
 
 
@@ -103,5 +155,11 @@ class AdminAdmin(PessoaAdminBase):
 
 @admin.register(PerfilHormonal)
 class PerfilHormonalAdmin(admin.ModelAdmin):
-    list_display = ("usuario", "condicao_hormonal", "uso_contraceptivo", "ciclo_regular", "peso_sensibilidade")
+    list_display = (
+        "usuario",
+        "condicao_hormonal",
+        "uso_contraceptivo",
+        "ciclo_regular",
+        "peso_sensibilidade",
+    )
     search_fields = ("usuario__nome_completo", "condicao_hormonal")
