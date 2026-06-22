@@ -242,14 +242,15 @@ def cadastrar_produto(request):
             status=400,
         )
 
+    # PRIORIZA o que o usuário digitou na tela. Se tiver em branco, pega da API.
     nome = (
-        origem["nome"]
-        or request.POST.get("nome", "")
+        request.POST.get("nome") 
+        or origem.get("nome", "")
     ).strip()
 
     marca = (
-        origem["marca"]
-        or request.POST.get("marca", "")
+        request.POST.get("marca") 
+        or origem.get("marca", "")
     ).strip()
 
     if not nome or not marca:
@@ -281,16 +282,26 @@ def cadastrar_produto(request):
                 nome=nome,
                 marca=marca,
                 codigo_barras=codigo,
-                imagem=request.FILES.get("imagem"),
                 categoria=categoria,
                 fabricante=(
-                    origem["fabricante"]
-                    or request.POST.get("fabricante", "")
+                    request.POST.get("fabricante")
+                    or origem.get("fabricante", "")
                 ).strip(),
                 descricao=request.POST.get(
                     "descricao", ""
                 ).strip(),
             )
+            
+            # TRATAMENTO CORRETO DA IMAGEM:
+            # Se o usuário fez o upload de um arquivo, salva o arquivo.
+            if request.FILES.get("imagem"):
+                produto.imagem = request.FILES["imagem"]
+                produto.save()
+            # Se não enviou arquivo, mas a API pública tem imagem, você pode salvar a URL se o seu model aceitar, 
+            # ou simplesmente deixar em branco para o usuário subir depois.
+            elif origem.get("imagem"):
+                # Caso seu model armazene apenas arquivos locais, o ideal é salvar o upload do request.FILES.
+                pass
 
     except IntegrityError:
         produto = Produto.objects.select_related(

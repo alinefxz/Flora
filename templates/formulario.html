@@ -14,8 +14,7 @@
     </div>
 </header>
 
-<form method="post" enctype="multipart/form-data"
-      class="content-panel data-form form-card">
+<form method="post" enctype="multipart/form-data" class="content-panel data-form form-card">
     {% csrf_token %}
 
     {% if form.non_field_errors %}
@@ -39,7 +38,9 @@
                             <span class="required-mark">*</span>
                         {% endif %}
                     </label>
-                {% elif field.name == "imagem" %}
+
+                {# Tratamento unificado para uploads de imagens (Produtos ou Perfil) #}
+                {% elif field.name == "imagem" or field.name == "foto_perfil" %}
                     <label for="{{ field.id_for_label }}">
                         {{ field.label }}
                         {% if field.field.required %}
@@ -48,11 +49,11 @@
                     </label>
 
                     <div class="product-image-input">
-                        <span class="product-form-preview"
-                              data-file-preview>
-                            {% if form.instance.imagem %}
-                                <img src="{{ form.instance.imagem.url }}"
-                                     alt="Foto atual do produto">
+                        <span class="product-form-preview" data-file-preview>
+                            {% if field.name == "imagem" and form.instance.imagem %}
+                                <img src="{{ form.instance.imagem.url }}" alt="Foto atual do produto">
+                            {% elif field.name == "foto_perfil" and form.instance.foto_perfil %}
+                                <img src="{{ form.instance.foto_perfil.url }}" alt="Foto de perfil atual">
                             {% else %}
                                 <span>Prévia da foto</span>
                             {% endif %}
@@ -61,11 +62,15 @@
                         <div>
                             {{ field }}
                             <small>
-                                Uma foto frontal ajuda a reconhecer o
-                                produto no catálogo e no armário.
+                                {% if field.name == "imagem" %}
+                                    Uma foto frontal ajuda a reconhecer o produto no catálogo e no armário.
+                                {% else %}
+                                    Escolha uma foto clara para identificação no perfil profissional.
+                                {% endif %}
                             </small>
                         </div>
                     </div>
+
                 {% else %}
                     <label for="{{ field.id_for_label }}">
                         {{ field.label }}
