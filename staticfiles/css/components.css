@@ -854,15 +854,19 @@ textarea:hover {
 /* Modais */
 
 .flora-modal {
-    width: min(650px, calc(100% - 28px));
-    max-height: min(850px, calc(100vh - 30px));
-    padding: 0;
-    overflow: auto;
-    border: 0;
-    border-radius: 26px;
-    color: var(--ink);
-    background: var(--surface);
-    box-shadow: 0 34px 100px rgba(5, 32, 22, .3);
+  width: min(650px, calc(100% - 28px));
+  max-height: min(850px, calc(100vh - 30px));
+  padding: 0;
+  overflow: auto;
+  border: 0;
+  border-radius: 26px;
+  color: var(--ink);
+  background: var(--surface);
+  box-shadow: 0 34px 100px rgba(5, 32, 22, .3);
+  /* Propriedades para centralização absoluta na tela */
+  margin: auto;
+  position: fixed;
+  inset: 0;
 }
 
 .flora-modal--wide {
@@ -1156,4 +1160,30 @@ textarea {
 
 .field:focus-within > label {
     color: var(--water);
+}
+
+
+/* Centralização de Containers de Registro / Formulários Isolados */
+.form-container-central {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 30px;
+  background: var(--surface);
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Modais de adição rápida centralizados */
+.flora-modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(650px, calc(100% - 32px));
+  max-height: min(800px, calc(100vh - 40px));
+  border-radius: 26px;
+  background: var(--surface);
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.15);
+  overflow-y: auto;
+  z-index: 1000;
 }

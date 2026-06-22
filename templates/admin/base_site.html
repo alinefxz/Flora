@@ -1,0 +1,19 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ block.super }} | Flora{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/admin_custom_fonts.css' %}">
+{% endblock %}
+
+{% block branding %}
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}">
+            <span style="font-weight: 700; letter-spacing: -0.02em;">Flora</span> - Administração
+        </a>
+    </h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
