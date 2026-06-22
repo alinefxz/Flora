@@ -540,7 +540,7 @@ def dashboard(request):
             request,
             "Crie seu perfil hormonal para liberar sua área pessoal.",
     )
-    return redirect("saude:criar", slug="perfis-hormonais")
+        return redirect("saude:criar", slug="perfis-hormonais")
 
     if perfil == USUARIA:
         exposicao = request.user.historico_exposicoes.first()

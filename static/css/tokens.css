@@ -93,23 +93,23 @@ h3 {
 
 
 body:not(.auth-page)::after {
-    position: fixed;
-    top: 104px;
-    right: clamp(24px, 7vw, 150px);
-    z-index: 0;
-    width: clamp(180px, 20vw, 340px);
-    aspect-ratio: 1;
-    background: var(--rosy);
-    opacity: .13;
-    pointer-events: none;
-    content: "";
-    -webkit-mask: url("../img/logoF.png") center / contain no-repeat;
-    mask: url("../img/logoF.png") center / contain no-repeat;
+  position: fixed;
+  top: 104px;
+  right: clamp(24px, 7vw, 150px);
+  z-index: -1; /* MUDANÇA CRÍTICA PARA NÃO BLOQUEAR CLIQUES */
+  width: clamp(180px, 20vw, 340px);
+  aspect-ratio: 1;
+  background: var(--rosy);
+  opacity: .13;
+  pointer-events: none;
+  content: "";
+  -webkit-mask: url("../img/logoF.png") center / contain no-repeat;
+  mask: url("../img/logoF.png") center / contain no-repeat;
 }
 
 .topbar,
 .drawer,
 .page-shell {
-    position: relative;
-    z-index: 1;
+  position: relative;
+  z-index: 1;
 }

@@ -131,6 +131,10 @@ class BasePerfilForm(forms.ModelForm):
 
         if "cidade" in self.fields:
             configurar_campo_cidade(self.fields["cidade"])
+            
+        # AQUI ESTAVA O ERRO CRÍTICO QUE NÃO SALVAVA A DATA:
+        if "data_nasc" in self.fields:
+            configurar_campo_data(self.fields["data_nasc"])
 
         self.fields["foto_perfil"].widget = forms.FileInput(
             attrs={

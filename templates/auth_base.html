@@ -8,13 +8,7 @@
     <title>{% block title %}FLORA{% endblock %}</title>
 
     <link rel="icon" type="image/png" href="{% static 'img/logoF.png' %}">
-<<<<<<< HEAD
-    <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=5">
-    <link rel="stylesheet" href="{% static 'css/components.css' %}?v=5">
-   <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=8">
-    <script src="{% static 'js/auth.js' %}?v=8" defer></script>
-    <script src="{% static 'js/smart-fields.js' %}?v=8" defer></script>
-=======
+    
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=9">
     <link rel="stylesheet" href="{% static 'css/components.css' %}?v=9">
     <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=9">
@@ -89,81 +83,5 @@
     </style>
     <script src="{% static 'js/auth.js' %}?v=9" defer></script>
     <script src="{% static 'js/smart-fields.js' %}?v=9" defer></script>
->>>>>>> bed8487f5560b1cf0fc2b4fbddea452902eda4b0
     {% block extra_head %}{% endblock %}
 </head>
-<body class="auth-page {% block auth_mode %}{% endblock %}">
-    <main class="auth-shell">
-        <section class="auth-content {% block content_class %}{% endblock %}">
-            {% block auth_content %}{% endblock %}
-        </section>
-
-        <aside class="auth-panel" aria-label="Apresentação da Flora">
-            <a href="{% url 'saude:entrar' %}" class="auth-brand"
-               aria-label="Flora - página de acesso">
-                <span class="auth-wordmark">
-                    <img src="{% static 'img/logoNome.png' %}" alt="Flora">
-                </span>
-            </a>
-
-            <div class="auth-panel-copy">
-                <p class="auth-kicker">{% block panel_kicker %}{% endblock %}</p>
-                <h1>{% block panel_title %}{% endblock %}</h1>
-                <p>{% block panel_text %}{% endblock %}</p>
-            </div>
-
-            <svg class="auth-panel-art"
-                 viewBox="0 0 760 980"
-                 aria-hidden="true"
-                 preserveAspectRatio="xMidYMid slice">
-                <g class="botanical-stem">
-                    <path d="M245 985 C300 835 356 722 419 616 C482 508 514 415 500 318"/>
-                    <path d="M415 617 C326 566 244 582 169 664"/>
-                    <path d="M493 337 C575 276 652 288 728 370"/>
-                    <path d="M335 768 C248 722 162 746 76 832"/>
-                    <path d="M448 520 C548 478 641 505 725 604"/>
-                </g>
-
-                <g class="botanical-leaves">
-                    <path d="M242 752 C157 707 96 718 43 789 C132 824 200 811 242 752Z"/>
-                    <path d="M309 690 C279 604 300 545 360 511 C399 592 384 654 309 690Z"/>
-                    <path d="M448 516 C544 463 620 474 680 547 C591 591 515 582 448 516Z"/>
-                    <path d="M537 382 C618 314 684 303 742 353 C674 420 606 429 537 382Z"/>
-                </g>
-
-                <g class="botanical-flower">
-                    <path d="M463 334 C402 254 408 181 468 117 C533 184 534 260 463 334Z"/>
-                    <path d="M469 333 C500 237 562 193 643 205 C640 304 575 357 469 333Z"/>
-                    <path d="M462 337 C373 305 327 247 334 173 C430 183 486 242 462 337Z"/>
-                    <path d="M457 344 C373 376 300 354 260 286 C350 249 423 268 457 344Z"/>
-                    <path d="M468 343 C556 376 621 348 669 278 C578 249 506 268 468 343Z"/>
-                    <path d="M465 344 C435 433 458 499 525 545 C569 463 551 390 465 344Z"/>
-                    <path d="M465 344 C420 421 354 451 279 425 C323 343 389 312 465 344Z"/>
-
-                    <path class="fine-line" d="M463 334 C460 260 464 199 486 142"/>
-                    <path class="fine-line" d="M469 333 C522 288 565 254 620 229"/>
-                    <path class="fine-line" d="M462 337 C415 288 378 239 354 189"/>
-                    <path class="fine-line" d="M457 344 C395 335 334 319 279 293"/>
-                    <path class="fine-line" d="M465 344 C498 407 514 469 519 526"/>
-
-                    <path d="M466 344 C489 270 501 214 508 166"/>
-                    <path d="M466 344 C509 289 550 252 594 224"/>
-                    <path d="M466 344 C430 291 397 243 372 194"/>
-                    <path d="M466 344 C406 341 349 325 300 299"/>
-                    <circle cx="466" cy="344" r="9"/>
-
-                    <path d="M510 168 C519 131 538 104 562 84"/>
-                    <path d="M596 223 C634 196 672 181 716 178"/>
-                    <path d="M371 194 C356 154 331 128 296 112"/>
-                </g>
-            </svg>
-
-            <p class="auth-panel-note">
-                Informação clara para escolhas mais conscientes.
-            </p>
-        </aside>
-    </main>
-
-    {% include "includes/entity_modals.html" %}
-</body>
-</html>

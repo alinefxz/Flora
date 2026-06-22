@@ -124,3 +124,22 @@ def exportar_relatorio_csv(request, usuario_id):
         ])
 
     return response
+
+@login_required(login_url="saude:entrar")
+def editar_perfil(request):
+    # O SEGREDO ESTÁ AQUI: Passar a instance=request.user para carregar e salvar os dados corretamente
+    if request.method == "POST":
+        form = CadastroForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Perfil atualizado com sucesso!")
+            return redirect("saude:perfil") # Ou a rota correta do seu painel
+    else:
+        # Carrega os dados que já existem para a pessoa não ter que digitar tudo de novo
+        form = CadastroForm(instance=request.user)
+
+    contexto = {
+        "form": form,
+        "titulo_form": "Editar Perfil",
+    }
+    return render(request, "formulario.html", contexto)
