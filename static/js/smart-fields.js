@@ -4,10 +4,69 @@ document.addEventListener("DOMContentLoaded", () => {
     let productTarget = null;
 
     function csrfToken() {
-        return document.cookie
+        const input = document.querySelector(
+            "[name='csrfmiddlewaretoken']"
+        );
+
+        if (input?.value) {
+            return input.value;
+        }
+
+        const cookie = document.cookie
             .split("; ")
-            .find(item => item.startsWith("csrftoken="))
-            ?.split("=")[1] || "";
+            .find(item => item.startsWith("csrftoken="));
+
+        return cookie ? decodeURIComponent(cookie.split("=")[1]) : "";
+    }
+
+    async function readJson(response) {
+        const contentType = response.headers.get("content-type") || "";
+
+        if (contentType.includes("application/json")) {
+            return response.json();
+        }
+
+        await response.text();
+
+        if (response.redirected || response.status === 401) {
+            throw new Error(
+                "Sua sessão expirou. Entre novamente e tente outra vez."
+            );
+        }
+
+        if (response.status === 403) {
+            throw new Error(
+                "A página perdeu a validação de segurança. Recarregue e tente novamente."
+            );
+        }
+
+        throw new Error(
+            "O servidor devolveu uma página de erro em vez de JSON. Confira as migrações e recarregue a página."
+        );
+    }
+
+    async function requestJson(url, options = {}) {
+        const response = await fetch(url, {
+            ...options,
+            credentials: "same-origin",
+            headers: {
+                "Accept": "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+                ...(options.headers || {}),
+            },
+        });
+
+        const data = await readJson(response);
+
+        if (!response.ok) {
+            throw new Error(
+                data.erro
+                || data.error
+                || "Não foi possível concluir a ação."
+            );
+        }
+
+        return data;
     }
 
     function closeSelects(except = null) {
@@ -247,8 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const response = await fetch("/usuarios/ufs/");
-        const data = await response.json();
+        const data = await requestJson("/usuarios/ufs/");
 
         data.ufs.forEach(uf => {
             select.add(
@@ -273,11 +331,9 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const response = await fetch(
+        const data = await requestJson(
             "/produtos/categorias/"
         );
-
-        const data = await response.json();
 
         data.categorias.forEach(category => {
             select.add(
@@ -320,10 +376,11 @@ document.addEventListener("DOMContentLoaded", () => {
             status.textContent = "";
         }
 
-        loadUfs().catch(() => {
+        loadUfs().catch(error => {
             if (status) {
                 status.textContent = (
-                    "Não foi possível carregar os estados."
+                    error.message
+                    || "Não foi possível carregar os estados."
                 );
             }
         });
@@ -380,14 +437,15 @@ document.addEventListener("DOMContentLoaded", () => {
         productTarget = select;
         resetProductModal();
 
-        loadCategories().catch(() => {
+        loadCategories().catch(error => {
             const status = document.querySelector(
                 "[data-product-status]"
             );
 
             if (status) {
                 status.textContent = (
-                    "Não foi possível carregar as categorias."
+                    error.message
+                    || "Não foi possível carregar as categorias."
                 );
             }
         });
@@ -450,19 +508,13 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
             try {
-                const response = await fetch(form.action, {
+                const data = await requestJson(form.action, {
                     method: "POST",
                     body: new FormData(form),
                     headers: {
                         "X-CSRFToken": csrfToken(),
                     },
                 });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.erro);
-                }
 
                 addAndSelect(
                     cityTarget,
@@ -508,6 +560,12 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
             codeInput.value = code;
+
+            if (!code) {
+                status.textContent = "Digite o código de barras.";
+                return;
+            }
+
             status.textContent = (
                 "Conferindo código e procurando o produto..."
             );
@@ -521,12 +579,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     + `?codigo_barras=${code}`
                 );
 
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.erro);
-                }
+                const data = await requestJson(url);
 
                 if (data.ja_cadastrado) {
                     addAndSelect(
@@ -617,19 +670,13 @@ document.addEventListener("DOMContentLoaded", () => {
             status.textContent = "Salvando produto...";
 
             try {
-                const response = await fetch(form.action, {
+                const data = await requestJson(form.action, {
                     method: "POST",
                     body: new FormData(form),
                     headers: {
                         "X-CSRFToken": csrfToken(),
                     },
                 });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.erro);
-                }
 
                 addAndSelect(
                     productTarget,

@@ -8,11 +8,88 @@
     <title>{% block title %}FLORA{% endblock %}</title>
 
     <link rel="icon" type="image/png" href="{% static 'img/logoF.png' %}">
+<<<<<<< HEAD
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=5">
     <link rel="stylesheet" href="{% static 'css/components.css' %}?v=5">
    <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=8">
     <script src="{% static 'js/auth.js' %}?v=8" defer></script>
     <script src="{% static 'js/smart-fields.js' %}?v=8" defer></script>
+=======
+    <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=9">
+    <link rel="stylesheet" href="{% static 'css/components.css' %}?v=9">
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=9">
+    <style>
+        .auth-panel-art {
+            right: -17%;
+            bottom: -10%;
+            width: min(104%, 860px);
+            height: min(104%, 900px);
+            opacity: .58;
+        }
+
+        .botanical-stem,
+        .botanical-leaves,
+        .botanical-flower {
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .botanical-stem {
+            stroke: rgba(247, 244, 213, .23);
+            stroke-width: 4.5;
+        }
+
+        .botanical-leaves {
+            stroke: rgba(199, 214, 161, .34);
+            stroke-width: 3.2;
+        }
+
+        .botanical-flower {
+            stroke: rgba(235, 185, 175, .48);
+            stroke-width: 3;
+        }
+
+        .botanical-flower .fine-line {
+            stroke: rgba(247, 244, 213, .24);
+            stroke-width: 1.6;
+        }
+
+        .input-password {
+            position: relative;
+            width: 100%;
+        }
+
+        .input-password input {
+            width: 100%;
+            padding-right: 92px;
+        }
+
+        .input-with-icon.input-password {
+            display: flex;
+            align-items: center;
+            padding-right: 92px;
+        }
+
+        .input-with-icon.input-password input {
+            flex: 1;
+            min-width: 0;
+            padding-right: 0;
+        }
+
+        .password-toggle {
+            top: 50%;
+            right: 14px;
+            display: inline-flex;
+            min-height: 32px;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-50%);
+        }
+    </style>
+    <script src="{% static 'js/auth.js' %}?v=9" defer></script>
+    <script src="{% static 'js/smart-fields.js' %}?v=9" defer></script>
+>>>>>>> bed8487f5560b1cf0fc2b4fbddea452902eda4b0
     {% block extra_head %}{% endblock %}
 </head>
 <body class="auth-page {% block auth_mode %}{% endblock %}">
@@ -35,88 +112,51 @@
                 <p>{% block panel_text %}{% endblock %}</p>
             </div>
 
-           <svg class="auth-panel-art"
-     viewBox="0 0 900 900"
-     aria-hidden="true"
-     preserveAspectRatio="xMidYMid slice">
-    <g class="botanical-stem">
-        <path d="
-            M920 860
-            C720 720 760 530 560 420
-            C440 355 430 220 500 90
-        "/>
+            <svg class="auth-panel-art"
+                 viewBox="0 0 760 980"
+                 aria-hidden="true"
+                 preserveAspectRatio="xMidYMid slice">
+                <g class="botanical-stem">
+                    <path d="M245 985 C300 835 356 722 419 616 C482 508 514 415 500 318"/>
+                    <path d="M415 617 C326 566 244 582 169 664"/>
+                    <path d="M493 337 C575 276 652 288 728 370"/>
+                    <path d="M335 768 C248 722 162 746 76 832"/>
+                    <path d="M448 520 C548 478 641 505 725 604"/>
+                </g>
 
-        <path d="
-            M710 610
-            C620 540 500 548 420 640
-        "/>
+                <g class="botanical-leaves">
+                    <path d="M242 752 C157 707 96 718 43 789 C132 824 200 811 242 752Z"/>
+                    <path d="M309 690 C279 604 300 545 360 511 C399 592 384 654 309 690Z"/>
+                    <path d="M448 516 C544 463 620 474 680 547 C591 591 515 582 448 516Z"/>
+                    <path d="M537 382 C618 314 684 303 742 353 C674 420 606 429 537 382Z"/>
+                </g>
 
-        <path d="
-            M610 455
-            C690 360 780 330 888 350
-        "/>
-    </g>
+                <g class="botanical-flower">
+                    <path d="M463 334 C402 254 408 181 468 117 C533 184 534 260 463 334Z"/>
+                    <path d="M469 333 C500 237 562 193 643 205 C640 304 575 357 469 333Z"/>
+                    <path d="M462 337 C373 305 327 247 334 173 C430 183 486 242 462 337Z"/>
+                    <path d="M457 344 C373 376 300 354 260 286 C350 249 423 268 457 344Z"/>
+                    <path d="M468 343 C556 376 621 348 669 278 C578 249 506 268 468 343Z"/>
+                    <path d="M465 344 C435 433 458 499 525 545 C569 463 551 390 465 344Z"/>
+                    <path d="M465 344 C420 421 354 451 279 425 C323 343 389 312 465 344Z"/>
 
-    <g class="botanical-leaves">
-        <path d="
-            M518 170
-            C430 130 406 72 425 20
-            C510 43 548 89 518 170Z
-        "/>
+                    <path class="fine-line" d="M463 334 C460 260 464 199 486 142"/>
+                    <path class="fine-line" d="M469 333 C522 288 565 254 620 229"/>
+                    <path class="fine-line" d="M462 337 C415 288 378 239 354 189"/>
+                    <path class="fine-line" d="M457 344 C395 335 334 319 279 293"/>
+                    <path class="fine-line" d="M465 344 C498 407 514 469 519 526"/>
 
-        <path d="
-            M488 290
-            C392 288 343 247 334 190
-            C426 178 483 215 488 290Z
-        "/>
+                    <path d="M466 344 C489 270 501 214 508 166"/>
+                    <path d="M466 344 C509 289 550 252 594 224"/>
+                    <path d="M466 344 C430 291 397 243 372 194"/>
+                    <path d="M466 344 C406 341 349 325 300 299"/>
+                    <circle cx="466" cy="344" r="9"/>
 
-        <path d="
-            M585 417
-            C569 329 609 272 668 252
-            C690 339 656 397 585 417Z
-        "/>
-
-        <path d="
-            M692 566
-            C711 474 768 432 828 440
-            C824 527 777 575 692 566Z
-        "/>
-
-        <path d="
-            M531 553
-            C442 511 375 535 338 585
-            C413 635 486 617 531 553Z
-        "/>
-
-        <path d="
-            M742 719
-            C661 660 591 670 545 713
-            C609 777 684 780 742 719Z
-        "/>
-    </g>
-
-    <g class="botanical-flower">
-        <path d="
-            M426 638
-            C384 575 399 524 450 505
-            C491 555 485 606 426 638Z
-        "/>
-
-        <path d="
-            M427 638
-            C468 572 520 558 558 596
-            C528 655 478 671 427 638Z
-        "/>
-
-        <path d="
-            M427 638
-            C371 678 321 664 301 615
-            C350 577 397 586 427 638Z
-        "/>
-
-        <circle cx="427" cy="638" r="19"/>
-    </g>
-</svg>
+                    <path d="M510 168 C519 131 538 104 562 84"/>
+                    <path d="M596 223 C634 196 672 181 716 178"/>
+                    <path d="M371 194 C356 154 331 128 296 112"/>
+                </g>
+            </svg>
 
             <p class="auth-panel-note">
                 Informação clara para escolhas mais conscientes.

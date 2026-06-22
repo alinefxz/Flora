@@ -10,6 +10,9 @@ from usuarios.models import Cidade, Pessoa
 from .models import ArmarioItem
 
 
+DATE_INPUT_FORMATS = ["%Y-%m-%d", "%d/%m/%Y"]
+
+
 def configurar_campo_cidade(campo):
     campo.queryset = Cidade.objects.select_related("uf").all()
     campo.empty_label = "Selecione ou pesquise sua cidade"
@@ -19,6 +22,14 @@ def configurar_campo_cidade(campo):
         "data-create-kind": "city",
         "data-search-placeholder": "Digite o nome da cidade",
     })
+
+
+def configurar_campo_data(campo):
+    campo.input_formats = DATE_INPUT_FORMATS
+    campo.widget = forms.DateInput(
+        format="%Y-%m-%d",
+        attrs={"type": "date"},
+    )
 
 
 class ComentarioProdutoForm(forms.ModelForm):
@@ -121,19 +132,17 @@ class BasePerfilForm(forms.ModelForm):
         if "cidade" in self.fields:
             configurar_campo_cidade(self.fields["cidade"])
 
-        if "data_nasc" in self.fields:
-            configurar_campo_data(self.fields["data_nasc"])
+        self.fields["foto_perfil"].widget = forms.FileInput(
+            attrs={
+                "accept": "image/png,image/jpeg,image/webp",
+                "data-image-input": "profile",
+            }
+        )
 
-        if "foto_perfil" in self.fields:
-            self.fields["foto_perfil"].widget = forms.FileInput(
-                attrs={
-                    "accept": "image/png,image/jpeg,image/webp",
-                    "data-image-input": "profile",
-                }
-            )
-            self.fields["foto_perfil"].help_text = (
-                "Se não escolher outra imagem, a foto salva será mantida."
-            )
+        self.fields["foto_perfil"].help_text = (
+            "A nova foto substitui a atual. "
+            "Se não escolher outra, a foto salva será mantida."
+        )
 
 class PerfilUsuarioForm(BasePerfilForm):
     class Meta:
