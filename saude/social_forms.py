@@ -118,36 +118,35 @@ class BasePerfilForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        configurar_campo_cidade(self.fields["cidade"])
+        if "cidade" in self.fields:
+            configurar_campo_cidade(self.fields["cidade"])
 
-        self.fields["foto_perfil"].widget = forms.FileInput(
-            attrs={
-                "accept": "image/png,image/jpeg,image/webp",
-                "data-image-input": "profile",
-            }
-        )
+        if "data_nasc" in self.fields:
+            configurar_campo_data(self.fields["data_nasc"])
 
-        self.fields["foto_perfil"].help_text = (
-            "A nova foto substitui a atual. "
-            "Se não escolher outra, a foto salva será mantida."
-        )
-
+        if "foto_perfil" in self.fields:
+            self.fields["foto_perfil"].widget = forms.FileInput(
+                attrs={
+                    "accept": "image/png,image/jpeg,image/webp",
+                    "data-image-input": "profile",
+                }
+            )
+            self.fields["foto_perfil"].help_text = (
+                "Se não escolher outra imagem, a foto salva será mantida."
+            )
 
 class PerfilUsuarioForm(BasePerfilForm):
     class Meta:
         model = Pessoa
         fields = [
             "nome_completo",
+            "email",
+            "cpf",
             "apelido",
             "foto_perfil",
             "data_nasc",
             "cidade",
         ]
-        widgets = {
-            "data_nasc": forms.DateInput(
-                attrs={"type": "date"}
-            ),
-        }
 
 
 class PerfilEspecialistaForm(BasePerfilForm):
@@ -155,20 +154,15 @@ class PerfilEspecialistaForm(BasePerfilForm):
         model = Pessoa
         fields = [
             "nome_completo",
+            "email",
+            "cpf",
             "foto_perfil",
+            "data_nasc",
             "cidade",
             "registro_profissional",
             "especialidade",
             "biografia",
         ]
-        widgets = {
-            "biografia": forms.Textarea(attrs={
-                "rows": 6,
-                "placeholder": (
-                    "Conte sobre sua atuação profissional."
-                ),
-            }),
-        }
 
 
 class PerfilAdminForm(BasePerfilForm):
@@ -176,7 +170,10 @@ class PerfilAdminForm(BasePerfilForm):
         model = Pessoa
         fields = [
             "nome_completo",
+            "email",
+            "cpf",
             "foto_perfil",
+            "data_nasc",
             "cidade",
             "nivel_acesso",
         ]

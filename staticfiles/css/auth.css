@@ -522,10 +522,6 @@
     padding-right: 82px;
 }
 
-.password-toggle {
-    top: 27px;
-}
-
 .form-section .field label {
     min-height: 20px;
 }
@@ -540,4 +536,36 @@
     .signup-form .form-grid {
         grid-template-columns: 1fr;
     }
+}
+
+.input-password {
+    position: relative;
+    width: 100%;
+}
+
+.input-password input {
+    width: 100%;
+    padding-right: 92px;
+}
+
+.input-with-icon.input-password {
+    display: flex;
+    align-items: center;
+    padding-right: 92px;
+}
+
+.input-with-icon.input-password input {
+    flex: 1;
+    min-width: 0;
+    padding-right: 0;
+}
+
+.password-toggle {
+    top: 50%;
+    right: 14px;
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+    justify-content: center;
+    transform: translateY(-50%);
 }

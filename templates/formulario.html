@@ -9,8 +9,7 @@
         <p class="overline">{{ config.secao }}</p>
         <h1>{{ titulo_form }}</h1>
         <p>
-            Preencha as informações de {{ config.titulo|lower }}.
-            Campos obrigatórios são validados ao salvar.
+            {{ form_intro|default:"Campos obrigatórios são validados ao salvar." }}
         </p>
     </div>
 </header>

@@ -7,8 +7,34 @@ from .services import (
     validar_municipio_ibge,
 )
 
+UFS_BRASIL = [
+    ("AC", "Acre"), ("AL", "Alagoas"), ("AP", "Amapá"), ("AM", "Amazonas"),
+    ("BA", "Bahia"), ("CE", "Ceará"), ("DF", "Distrito Federal"),
+    ("ES", "Espírito Santo"), ("GO", "Goiás"), ("MA", "Maranhão"),
+    ("MT", "Mato Grosso"), ("MS", "Mato Grosso do Sul"), ("MG", "Minas Gerais"),
+    ("PA", "Pará"), ("PB", "Paraíba"), ("PR", "Paraná"), ("PE", "Pernambuco"),
+    ("PI", "Piauí"), ("RJ", "Rio de Janeiro"), ("RN", "Rio Grande do Norte"),
+    ("RS", "Rio Grande do Sul"), ("RO", "Rondônia"), ("RR", "Roraima"),
+    ("SC", "Santa Catarina"), ("SP", "São Paulo"), ("SE", "Sergipe"),
+    ("TO", "Tocantins"),
+]
+
+
+def garantir_ufs():
+    existentes = set(UF.objects.values_list("sigla", flat=True))
+    novas = [
+        UF(sigla=sigla, nome_estado=nome)
+        for sigla, nome in UFS_BRASIL
+        if sigla not in existentes
+    ]
+
+    if novas:
+        UF.objects.bulk_create(novas, ignore_conflicts=True)
+
 
 def listar_ufs(request):
+    garantir_ufs()
+
     dados = [
         {
             "id": uf.id,
@@ -36,15 +62,16 @@ def cidades_por_uf(request, uf_id):
 
 
 @require_POST
+@require_POST
 def cadastrar_cidade(request):
-    nome = request.POST.get("nome_cidade", "").strip()
+    garantir_ufs()
+
+    nome = " ".join(request.POST.get("nome_cidade", "").split())
     uf_id = request.POST.get("uf", "").strip()
 
-    try:
-        uf = UF.objects.get(pk=uf_id)
-    except (UF.DoesNotExist, ValueError):
+    if not nome:
         return JsonResponse(
-            {"erro": "Selecione um estado válido."},
+            {"erro": "Digite o nome da cidade."},
             status=400,
         )
 

@@ -45,8 +45,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     headers: { "X-Requested-With": "XMLHttpRequest" }
                 });
 
-                if (!response.ok) throw new Error("Falha ao curtir");
+                const contentType = response.headers.get("content-type") || "";
 
+            if (!contentType.includes("application/json")) {
+                throw new Error("Resposta inválida do servidor.");
+            }
+
+const data = await response.json();
                 const data = await response.json();
                 const button = form.querySelector("button");
                 const count = form.querySelector("[data-like-count]");

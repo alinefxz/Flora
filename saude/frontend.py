@@ -327,6 +327,19 @@ def perfil_usuario(user):
         return ESPECIALISTA
     return USUARIA
 
+def precisa_criar_perfil_hormonal(user):
+    return (
+        perfil_usuario(user) == USUARIA
+        and not PerfilHormonal.objects.filter(usuario_id=user.pk).exists()
+    )
+
+
+def redirecionar_pos_login(user):
+    if precisa_criar_perfil_hormonal(user):
+        return redirect("saude:criar", slug="perfis-hormonais")
+
+    return redirect("saude:dashboard")
+
 
 def get_config(slug):
     try:
@@ -468,7 +481,7 @@ def salvar_form(form, config, request):
 
 def entrar(request):
     if request.user.is_authenticated:
-        return redirect("saude:dashboard")
+        return redirecionar_pos_login(request.user)
 
     form = LoginForm(request.POST or None)
 
@@ -481,7 +494,7 @@ def entrar(request):
 
         if user is not None and user.is_active:
             login(request, user)
-            return redirect("saude:dashboard")
+            return redirecionar_pos_login(user)
 
         messages.error(request, "E-mail ou senha inválidos.")
 
@@ -490,22 +503,23 @@ def entrar(request):
 
 def cadastrar(request):
     if request.user.is_authenticated:
-        return redirect("saude:dashboard")
+        return redirecionar_pos_login(request.user)
 
-    form = CadastroForm(
-        request.POST or None,
-        request.FILES or None,
-    )
+    form = CadastroForm(request.POST or None, request.FILES or None)
 
     if request.method == "POST" and form.is_valid():
         user = form.save()
         login(request, user)
 
-        if user.tipo_usuario == "USUARIA":
-            PerfilHormonal.objects.get_or_create(usuario=user)
+        if user.tipo_usuario == USUARIA:
+            messages.success(
+                request,
+                "Sua conta foi criada. Agora preencha seu perfil hormonal para começar.",
+            )
+        else:
+            messages.success(request, "Sua conta foi criada.")
 
-        messages.success(request, "Sua conta foi criada.")
-        return redirect("saude:dashboard")
+        return redirecionar_pos_login(user)
 
     return render(request, "cadastrar.html", {"form": form})
 
@@ -520,6 +534,13 @@ def sair(request):
 def dashboard(request):
     perfil = perfil_usuario(request.user)
     contexto = contexto_base(request)
+
+    if precisa_criar_perfil_hormonal(request.user):
+        messages.info(
+            request,
+            "Crie seu perfil hormonal para liberar sua área pessoal.",
+    )
+    return redirect("saude:criar", slug="perfis-hormonais")
 
     if perfil == USUARIA:
         exposicao = request.user.historico_exposicoes.first()
@@ -712,15 +733,26 @@ def criar(request, slug):
 
     if request.method == "POST" and form.is_valid():
         salvar_form(form, config, request)
-        messages.success(request, "Registro salvo com sucesso.")
-        return redirect("saude:lista", slug=slug)
+
+    if slug == "perfis-hormonais" and perfil_usuario(request.user) == USUARIA:
+        messages.success(request, "Perfil hormonal salvo.")
+        return redirect("saude:dashboard")
+
+    messages.success(request, "Registro salvo com sucesso.")
+    return redirect("saude:lista", slug=slug)
 
     contexto = contexto_base(request)
     contexto.update({
-        "config": config,
-        "slug": slug,
-        "form": form,
-        "titulo_form": "Novo registro",
+        "titulo_form": (
+        "Criar perfil hormonal"
+        if slug == "perfis-hormonais" and perfil_usuario(request.user) == USUARIA
+        else "Novo registro"
+    ),
+        "form_intro": (
+        "Essas informações personalizam seu radar hormonal e aparecem para o admin."
+        if slug == "perfis-hormonais"
+        else f"Preencha as informações de {config['titulo'].lower()}."
+    )   ,
     })
 
     return render(request, "formulario.html", contexto)
