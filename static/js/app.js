@@ -369,3 +369,92 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
   });
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const select = document.querySelector(
+    '[name="sintoma_opcao"]'
+  );
+
+  const outroInput = document.querySelector(
+    '[name="outro_sintoma"]'
+  );
+
+  const descricaoInput = document.querySelector(
+    '[name="descricao_outro"]'
+  );
+
+  if (!select || !outroInput) {
+    return;
+  }
+
+  const outroField = outroInput.closest(".field");
+  const descricaoField = descricaoInput?.closest(".field");
+
+  function atualizarCampos() {
+    const mostrar = select.value === "OUTRO";
+
+    if (outroField) {
+      outroField.style.display = mostrar
+        ? ""
+        : "none";
+    }
+
+    if (descricaoField) {
+      descricaoField.style.display = mostrar
+        ? ""
+        : "none";
+    }
+
+    outroInput.required = mostrar;
+
+    if (descricaoInput) {
+      descricaoInput.required = mostrar;
+    }
+  }
+
+  select.addEventListener(
+    "change",
+    atualizarCampos
+  );
+
+  atualizarCampos();
+});
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const select = document.querySelector(
+    '[name="sintoma_opcao"]'
+  );
+
+  const outroSintoma = document.querySelector(
+    '[name="outro_sintoma"]'
+  )?.closest(".field");
+
+  const descricaoOutro = document.querySelector(
+    '[name="descricao_outro"]'
+  )?.closest(".field");
+
+  if (!select || !outroSintoma || !descricaoOutro) {
+    return;
+  }
+
+  function atualizarCampos() {
+    const mostrar = select.value === "OUTRO";
+
+    outroSintoma.style.display = mostrar
+      ? "block"
+      : "none";
+
+    descricaoOutro.style.display = mostrar
+      ? "block"
+      : "none";
+  }
+
+  select.addEventListener(
+    "change",
+    atualizarCampos
+  );
+
+  atualizarCampos();
+});

@@ -5,13 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0a3323">
+
     <title>{% block title %}FLORA{% endblock %}</title>
 
     <link rel="icon" type="image/png" href="{% static 'img/logoF.png' %}">
-    
+
     <link rel="stylesheet" href="{% static 'css/tokens.css' %}?v=9">
     <link rel="stylesheet" href="{% static 'css/components.css' %}?v=9">
     <link rel="stylesheet" href="{% static 'css/auth.css' %}?v=9">
+
     <style>
         .auth-panel-art {
             right: -17%;
@@ -81,7 +83,46 @@
             transform: translateY(-50%);
         }
     </style>
+
     <script src="{% static 'js/auth.js' %}?v=9" defer></script>
     <script src="{% static 'js/smart-fields.js' %}?v=9" defer></script>
+
     {% block extra_head %}{% endblock %}
 </head>
+
+<body class="auth-page {% block auth_mode %}{% endblock %}">
+    <main class="auth-shell">
+        <section class="auth-content {% block content_class %}{% endblock %}">
+            {% block auth_content %}{% endblock %}
+        </section>
+
+        <aside class="auth-panel" aria-label="Apresentação da Flora">
+            <a href="{% url 'saude:entrar' %}"
+               class="auth-brand"
+               aria-label="Flora - página de acesso">
+                <span class="auth-wordmark">
+                    <img src="{% static 'img/logoNome.png' %}" alt="Flora">
+                </span>
+            </a>
+
+            <div class="auth-panel-copy">
+                <p class="auth-kicker">{% block panel_kicker %}{% endblock %}</p>
+                <h1>{% block panel_title %}{% endblock %}</h1>
+                <p>{% block panel_text %}{% endblock %}</p>
+            </div>
+
+            <svg class="auth-panel-art"
+                 viewBox="0 0 760 980"
+                 aria-hidden="true"
+                 preserveAspectRatio="xMidYMid slice">
+            </svg>
+
+            <p class="auth-panel-note">
+                Informação clara para escolhas mais conscientes.
+            </p>
+        </aside>
+    </main>
+
+    {% include "includes/entity_modals.html" %}
+</body>
+</html>

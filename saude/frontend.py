@@ -729,34 +729,62 @@ def criar(request, slug):
         request.POST or None,
         request.FILES or None,
     )
+
     preparar_form(form, config, request)
 
-    if request.method == "POST" and form.is_valid():
-        salvar_form(form, config, request)
+    if request.method == "POST":
 
-    if slug == "perfis-hormonais" and perfil_usuario(request.user) == USUARIA:
-        messages.success(request, "Perfil hormonal salvo.")
-        return redirect("saude:dashboard")
+        if form.is_valid():
 
-    messages.success(request, "Registro salvo com sucesso.")
-    return redirect("saude:lista", slug=slug)
+            salvar_form(form, config, request)
+
+            if (
+                slug == "perfis-hormonais"
+                and perfil_usuario(request.user) == USUARIA
+            ):
+                messages.success(
+                    request,
+                    "Perfil hormonal salvo."
+                )
+                return redirect("saude:dashboard")
+
+            messages.success(
+                request,
+                "Registro salvo com sucesso."
+            )
+            return redirect(
+                "saude:lista",
+                slug=slug
+            )
+
+        else:
+            print("ERROS:")
+            print(form.errors.as_json())
 
     contexto = contexto_base(request)
+
     contexto.update({
+        "config": config,
+        "slug": slug,
+        "form": form,
         "titulo_form": (
-        "Criar perfil hormonal"
-        if slug == "perfis-hormonais" and perfil_usuario(request.user) == USUARIA
-        else "Novo registro"
-    ),
+            "Criar perfil hormonal"
+            if slug == "perfis-hormonais"
+            and perfil_usuario(request.user) == USUARIA
+            else "Novo registro"
+        ),
         "form_intro": (
-        "Essas informações personalizam seu radar hormonal e aparecem para o admin."
-        if slug == "perfis-hormonais"
-        else f"Preencha as informações de {config['titulo'].lower()}."
-    )   ,
+            "Essas informações personalizam seu radar hormonal."
+            if slug == "perfis-hormonais"
+            else f"Preencha as informações de {config['titulo'].lower()}."
+        ),
     })
 
-    return render(request, "formulario.html", contexto)
-
+    return render(
+        request,
+        "formulario.html",
+        contexto,
+    )
 
 @login_required(login_url="saude:entrar")
 def editar(request, slug, pk):

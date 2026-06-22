@@ -3,29 +3,55 @@ document.addEventListener("DOMContentLoaded", () => {
     const userFields = document.querySelector("[data-user-fields]");
     const specialistFields = document.querySelector("[data-specialist-fields]");
 
-    if (!radios.length || !userFields || !specialistFields) return;
+    if (!radios.length || !userFields || !specialistFields) {
+        return;
+    }
 
-    function setSectionState(section, disabled) {
-        section.hidden = disabled;
+    function clearSectionFields(section) {
         section.querySelectorAll("input, select, textarea").forEach(field => {
-            field.disabled = disabled;
-
-            if (field.disabled) {
-                // Evita carregar valores fantasmas em campos ocultados
-                if (field.type !== 'radio' && field.type !== 'checkbox') field.value = "";
+            if (
+                field.type === "radio" ||
+                field.type === "checkbox"
+            ) {
+                field.checked = false;
+            } else {
+                field.value = "";
             }
 
             if (field.tagName === "SELECT") {
-                field.dispatchEvent(new Event("smart-select:refresh"));
+                field.selectedIndex = 0;
+                field.dispatchEvent(
+                    new Event("smart-select:refresh", { bubbles: true })
+                );
             }
         });
     }
 
+    function setSectionState(section, disabled) {
+        section.hidden = disabled;
+
+        section.querySelectorAll("input, select, textarea").forEach(field => {
+            field.disabled = disabled;
+        });
+
+        if (disabled) {
+            clearSectionFields(section);
+        }
+    }
+
     function toggleFields() {
-        const selected = document.querySelector('input[name="tipo_usuario"]:checked');
-        if (!selected) return; // Proteção para não executar sem seleção ativa
-        
+        const selected = document.querySelector(
+            'input[name="tipo_usuario"]:checked'
+        );
+
+        if (!selected) {
+            setSectionState(userFields, true);
+            setSectionState(specialistFields, true);
+            return;
+        }
+
         const specialist = selected.value === "ESPECIALISTA";
+
         setSectionState(userFields, specialist);
         setSectionState(specialistFields, !specialist);
     }
@@ -34,8 +60,14 @@ document.addEventListener("DOMContentLoaded", () => {
         radio.addEventListener("change", toggleFields);
     });
 
-    // Só roda a alternância inicial se já houver um tipo pré-selecionado pelo Django
-    if (document.querySelector('input[name="tipo_usuario"]:checked')) {
+    const selected = document.querySelector(
+        'input[name="tipo_usuario"]:checked'
+    );
+
+    if (selected) {
         toggleFields();
+    } else {
+        setSectionState(userFields, true);
+        setSectionState(specialistFields, true);
     }
 });
