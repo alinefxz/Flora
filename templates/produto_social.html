@@ -7,137 +7,143 @@
     ← Voltar ao catálogo
 </a>
 
-<section class="product-detail-hero">
-    <div class="product-detail-image">
+<section class="product-detail-hero align-items-stretch">
+    <div class="product-detail-image d-flex align-items-center justify-content-center">
         {% if produto.imagem %}
-            <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}">
+            <img src="{{ produto.imagem.url }}" alt="{{ produto.nome }}" style="max-height: 100%; object-fit: cover;">
         {% else %}
             <span>{{ produto.nome|first|upper }}</span>
         {% endif %}
     </div>
 
-    <div class="product-detail-copy">
-        <span class="tag">{{ produto.categoria.nome }}</span>
-        <h1>{{ produto.nome }}</h1>
-        <p class="product-brand">{{ produto.marca }}</p>
-        <p>{{ produto.descricao|default:"Descrição ainda não informada." }}</p>
+    <div class="product-detail-copy d-flex flex-column justify-content-between">
+        <div>
+            <span class="tag">{{ produto.categoria.nome }}</span>
+            <h1>{{ produto.nome }}</h1>
+            <p class="product-brand">{{ produto.marca }}</p>
+            <p>{{ produto.descricao|default:"Descrição ainda não informada." }}</p>
+        </div>
 
-        <dl class="product-facts">
-            <div>
-                <dt>Nota Flora</dt>
-                <dd>{{ produto.nota_flora|floatformat:1 }}/5</dd>
-            </div>
-            <div>
-                <dt>Fabricante</dt>
-                <dd>{{ produto.fabricante|default:"Não informado" }}</dd>
-            </div>
-            <div>
-                <dt>Código de barras</dt>
-                <dd>{{ produto.codigo_barras }}</dd>
-            </div>
-        </dl>
+        <div>
+            <dl class="product-facts mb-4">
+                <div>
+                    <dt>Nota Flora</dt>
+                    <dd>{{ produto.nota_flora|floatformat:1 }}/5</dd>
+                </div>
+                <div>
+                    <dt>Fabricante</dt>
+                    <dd>{{ produto.fabricante|default:"Não informado" }}</dd>
+                </div>
+                <div>
+                    <dt>Código de barras</dt>
+                    <dd>{{ produto.codigo_barras }}</dd>
+                </div>
+            </dl>
 
-        {% if perfil_atual == "USUARIA" %}
-            {% if esta_no_armario %}
-                <a href="{% url 'saude:armario' %}"
-                   class="secondary-button">
-                    Já está no meu armário
-                </a>
-            {% else %}
-                <a href="{% url 'saude:armario' %}"
-                   class="primary-button">
-                    Adicionar pelo meu armário
-                </a>
+            {% if perfil_atual == "USUARIA" %}
+                {% if esta_no_armario %}
+                    <a href="{% url 'saude:armario' %}" class="secondary-button w-100 text-center">
+                        Já está no meu armário
+                    </a>
+                {% else %}
+                    <a href="{% url 'saude:armario' %}" class="primary-button w-100 text-center">
+                        Adicionar pelo meu armário
+                    </a>
+                {% endif %}
             {% endif %}
-        {% endif %}
+        </div>
     </div>
 </section>
 
-<section class="social-columns">
-    <article class="content-panel">
-        <header class="panel-heading">
-            <div>
-                <p class="overline">Composição</p>
-                <h2>Ingredientes cadastrados</h2>
-            </div>
-        </header>
-
-        <div class="ingredient-list">
-            {% for item in produto.composicao.all %}
-                <div class="ingredient-item">
-                    <div>
-                        <strong>{{ item.ingrediente.nome }}</strong>
-                        <span>{{ item.ingrediente.funcao_quimica|default:"Função não informada" }}</span>
-                    </div>
-                    <span>
-                        {{ item.concentracao_estimada|floatformat:2 }}
-                        {{ item.unidade_concentracao }}
-                    </span>
+<section class="social-columns row g-4 align-items-stretch mb-4">
+    <div class="col-12 col-lg-7">
+        <article class="content-panel h-100 d-flex flex-column">
+            <header class="panel-heading">
+                <div>
+                    <p class="overline">Composição</p>
+                    <h2>Ingredientes cadastrados</h2>
                 </div>
-            {% empty %}
-                <div class="empty-inline">
-                    <p>A composição ainda não foi cadastrada.</p>
-                </div>
-            {% endfor %}
-        </div>
-    </article>
+            </header>
 
-    <aside class="content-panel">
-        <header class="panel-heading">
-            <div>
-                <p class="overline">Alternativas</p>
-                <h2>Sugestões de troca</h2>
-            </div>
-        </header>
-
-        <div class="mini-suggestion-list">
-            {% for sugestao in sugestoes %}
-                <article class="mini-suggestion">
-                    <span>Trocar por</span>
-                    <strong>{{ sugestao.produto_seguro.nome }}</strong>
-                    <p>{{ sugestao.justificativa_tecnica|truncatechars:150 }}</p>
-
-                    {% if sugestao.especialista %}
-                        <a href="{% url 'saude:perfil_especialista' sugestao.especialista.pk %}"
-                           class="specialist-byline">
-                            <span class="avatar avatar--small avatar--especialista">
-                                {% if sugestao.especialista.foto_perfil %}
-                                    <img src="{{ sugestao.especialista.foto_perfil.url }}"
-                                         alt="Foto de {{ sugestao.especialista.nome_completo }}">
-                                {% else %}
-                                    {{ sugestao.especialista.nome_completo|first|upper }}
-                                {% endif %}
-                            </span>
-                            <span>
-                                <b>{{ sugestao.especialista.nome_completo }}</b>
-                                <small>
-                                    {{ sugestao.especialista.especialidade|default:"Especialista" }}
-                                    {% if sugestao.especialista.registro_profissional %}
-                                        · {{ sugestao.especialista.registro_profissional }}
-                                    {% endif %}
-                                </small>
-                            </span>
-                        </a>
-                    {% else %}
-                        <div class="specialist-byline">
-                            <span class="avatar avatar--small avatar--admin">F</span>
-                            <span>
-                                <b>Equipe Flora</b>
-                                <small>Base técnica da plataforma</small>
-                            </span>
+            <div class="ingredient-list flex-grow-1">
+                {% for item in produto.composicao.all %}
+                    <div class="ingredient-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ item.ingrediente.nome }}</strong>
+                            <span>{{ item.ingrediente.funcao_quimica|default:"Função não informada" }}</span>
                         </div>
-                    {% endif %}
-                </article>
-            {% empty %}
-                <div class="empty-inline">
-                    <p>Ainda não há uma troca sugerida para este produto.</p>
+                        <span class="fw-semibold">
+                            {{ item.concentracao_estimada|floatformat:2 }}
+                            {{ item.unidade_concentracao }}
+                        </span>
+                    </div>
+                {% empty %}
+                    <div class="empty-inline">
+                        <p>A composição ainda não foi cadastrada.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    </div>
+
+    <div class="col-12 col-lg-5">
+        <aside class="content-panel h-100 d-flex flex-column">
+            <header class="panel-heading">
+                <div>
+                    <p class="overline">Alternativas</p>
+                    <h2>Sugestões de troca</h2>
                 </div>
-            {% endfor %}
-        </div>
-    </aside>
+            </header>
+
+            <div class="mini-suggestion-list flex-grow-1">
+                {% for sugestao in sugestoes %}
+                    <article class="mini-suggestion d-flex flex-column justify-content-between mb-3 p-3 border rounded">
+                        <div>
+                            <span class="text-muted small">Trocar por</span>
+                            <strong class="d-block mb-1">{{ sugestao.produto_seguro.nome }}</strong>
+                            <p class="text-secondary small">{{ sugestao.justificativa_tecnica|truncatechars:120 }}</p>
+                        </div>
+
+                        {% if sugestao.especialista %}
+                            <a href="{% url 'saude:perfil_especialista' sugestao.especialista.pk %}" class="specialist-byline d-flex align-items-center mt-2">
+                                <span class="avatar avatar--small avatar--especialista me-2 d-flex align-items-center justify-content-center overflow-hidden" style="width: 32px; height: 32px; border-radius: 50%;">
+                                    {% if sugestao.especialista.foto_perfil %}
+                                        <img src="{{ sugestao.especialista.foto_perfil.url }}" alt="Foto de {{ sugestao.especialista.nome_completo }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                        {{ sugestao.especialista.nome_completo|first|upper }}
+                                    {% endif %}
+                                </span>
+                                <div>
+                                    <b class="d-block small text-dark">{{ sugestao.especialista.nome_completo }}</b>
+                                    <small class="text-muted">
+                                        {{ sugestao.especialista.especialidade|default:"Especialista" }}
+                                        {% if sugestao.especialista.registro_profissional %}
+                                            · {{ sugestao.especialista.registro_profissional }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </a>
+                        {% else %}
+                            <div class="specialist-byline d-flex align-items-center mt-2">
+                                <span class="avatar avatar--small avatar--admin me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border-radius: 50%; background-color: var(--sage);">F</span>
+                                <div>
+                                    <b class="d-block small text-dark">Equipe Flora</b>
+                                    <small class="text-muted">Base técnica da plataforma</small>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </article>
+                {% empty %}
+                    <div class="empty-inline">
+                        <p>Ainda não há uma troca sugerida para este produto.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </aside>
+    </div>
 </section>
 
-<section class="content-panel comments-panel">
+<section class="content-panel comments-panel mt-4">
     <header class="panel-heading">
         <div>
             <p class="overline">Discussão técnica</p>
@@ -146,12 +152,10 @@
     </header>
 
     {% if pode_comentar %}
-        <form method="post"
-              action="{% url 'saude:comentar_produto' produto.pk %}"
-              class="comment-form">
+        <form method="post" action="{% url 'saude:comentar_produto' produto.pk %}" class="comment-form mb-4">
             {% csrf_token %}
-            <div class="field">
-                <label for="{{ comentario_form.texto.id_for_label }}">
+            <div class="field mb-3">
+                <label for="{{ comentario_form.texto.id_for_label }}" class="form-label fw-semibold">
                     Adicionar observação
                 </label>
                 {{ comentario_form.texto }}
@@ -163,36 +167,31 @@
         </form>
     {% endif %}
 
-    <div class="comment-list">
+    <div class="comment-list d-flex flex-column g-3">
         {% for comentario in comentarios %}
-            <article class="comment-card">
-                <header class="comment-author">
-                    <span class="avatar avatar--small avatar--{{ comentario.autor.tipo_usuario|lower }}">
+            <article class="comment-card p-3 border rounded bg-white shadow-sm">
+                <header class="comment-author d-flex align-items-center mb-2">
+                    <span class="avatar avatar--small avatar--{{ comentario.autor.tipo_usuario|lower }} me-2 d-flex align-items-center justify-content-center overflow-hidden" style="width: 36px; height: 36px; border-radius: 50%;">
                         {% if comentario.autor.foto_perfil %}
-                            <img src="{{ comentario.autor.foto_perfil.url }}"
-                                 alt="Foto de {{ comentario.autor.nome_completo }}">
+                            <img src="{{ comentario.autor.foto_perfil.url }}" alt="Foto de {{ comentario.autor.nome_completo }}" style="width: 100%; height: 100%; object-fit: cover;">
                         {% else %}
                             {{ comentario.autor.nome_completo|first|upper }}
                         {% endif %}
                     </span>
                     <div>
-                        <strong>{{ comentario.autor.nome_completo }}</strong>
-                        <span>
+                        <strong class="d-block text-dark">{{ comentario.autor.nome_completo }}</strong>
+                        <span class="text-muted small">
                             {{ comentario.autor.especialidade|default:comentario.autor.get_tipo_usuario_display }}
                             · {{ comentario.criado_em|date:"d/m/Y" }}
                         </span>
                     </div>
                 </header>
 
-                <p>{{ comentario.texto }}</p>
+                <p class="text-dark mb-2">{{ comentario.texto }}</p>
 
-                <form method="post"
-                      action="{% url 'saude:curtir_comentario' comentario.pk %}"
-                      data-like-form>
+                <form method="post" action="{% url 'saude:curtir_comentario' comentario.pk %}" data-like-form>
                     {% csrf_token %}
-                    <button type="submit"
-                            class="like-button {% if comentario.pk in comentarios_curtidos %}is-liked{% endif %}"
-                            aria-pressed="{% if comentario.pk in comentarios_curtidos %}true{% else %}false{% endif %}">
+                    <button type="submit" class="like-button {% if comentario.pk in comentarios_curtidos %}is-liked{% endif %}" aria-pressed="{% if comentario.pk in comentarios_curtidos %}true{% else %}false{% endif %}">
                         Útil · <span data-like-count>{{ comentario.total_curtidas }}</span>
                     </button>
                 </form>

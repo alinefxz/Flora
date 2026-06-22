@@ -335,8 +335,6 @@ def precisa_criar_perfil_hormonal(user):
 
 
 def redirecionar_pos_login(user):
-    if precisa_criar_perfil_hormonal(user):
-        return redirect("saude:criar", slug="perfis-hormonais")
 
     return redirect("saude:dashboard")
 
@@ -534,124 +532,68 @@ def sair(request):
 def dashboard(request):
     perfil = perfil_usuario(request.user)
     contexto = contexto_base(request)
-
-    if precisa_criar_perfil_hormonal(request.user):
-        messages.info(
-            request,
-            "Crie seu perfil hormonal para liberar sua área pessoal.",
-    )
-        return redirect("saude:criar", slug="perfis-hormonais")
+    precisa_perfil = precisa_criar_perfil_hormonal(request.user)
 
     if perfil == USUARIA:
-        exposicao = request.user.historico_exposicoes.first()
-        metricas = [
-            {
-                "rotulo": "Produtos no armário",
-                "valor": request.user.armario.count(),
-                "url": reverse("saude:lista", args=["armario"]),
-            },
-            {
-                "rotulo": "Sintomas registrados",
-                "valor": request.user.diario_sintomas.count(),
-                "url": reverse(
-                    "saude:lista",
-                    args=["registros-sintomas"],
-                ),
-            },
-            {
-                "rotulo": "Ciclos registrados",
-                "valor": request.user.ciclos.count(),
-                "url": reverse("saude:lista", args=["ciclos"]),
-            },
-            {
-                "rotulo": "Alertas",
-                "valor": request.user.alertas_risco.count(),
-                "url": reverse("saude:lista", args=["alertas"]),
-            },
-        ]
-        atividades = request.user.notificacoes.all()[:4]
+        # Pega a última exposição calculada
+        exposicao = getattr(request.user, 'historico_exposicoes', None)
+        exposicao = exposicao.first() if exposicao else None
+        
+        armario_count = getattr(request.user, 'armario', None)
+        armario_count = armario_count.count() if armario_count else 0
+        
+        sintomas_count = getattr(request.user, 'diario_sintomas', None)
+        sintomas_count = sintomas_count.count() if sintomas_count else 0
 
+        ciclos_count = getattr(request.user, 'ciclos', None)
+        ciclos_count = ciclos_count.count() if ciclos_count else 0
+
+        alertas_count = getattr(request.user, 'alertas_risco', None)
+        alertas_count = alertas_count.count() if alertas_count else 0
+
+        metricas = [
+            {"rotulo": "Produtos no armário", "valor": armario_count, "url": reverse("saude:lista", args=["armario"])},
+            {"rotulo": "Sintomas registrados", "valor": sintomas_count, "url": reverse("saude:lista", args=["registros-sintomas"])},
+            {"rotulo": "Ciclos registrados", "valor": ciclos_count, "url": reverse("saude:lista", args=["ciclos"])},
+            {"rotulo": "Alertas", "valor": alertas_count, "url": reverse("saude:lista", args=["alertas"])},
+        ]
+        atividades = request.user.notificacoes.all()[:4] if hasattr(request.user, 'notificacoes') else []
+
+    # ... (mantenha os blocos elif ESPECIALISTA e o else do ADMIN idênticos aos anteriores) ...
     elif perfil == ESPECIALISTA:
         exposicao = None
-
-        minhas_sugestoes = SugestaoTroca.objects.filter(
-            especialista=request.user
-        )
-
+        minhas_sugestoes = SugestaoTroca.objects.filter(especialista=request.user)
         metricas = [
-            {
-                "rotulo": "Minhas sugestões",
-                "valor": minhas_sugestoes.count(),
-                "url": reverse("saude:lista", args=["sugestoes"]),
-            },
-            {
-                "rotulo": "Produtos",
-                "valor": Produto.objects.count(),
-                "url": reverse("saude:lista", args=["produtos"]),
-            },
-            {
-                "rotulo": "Substâncias",
-                "valor": Substancia.objects.count(),
-                "url": reverse("saude:lista", args=["substancias"]),
-            },
-            {
-                "rotulo": "Referências",
-                "valor": Referencia.objects.count(),
-                "url": reverse("saude:lista", args=["referencias"]),
-            },
+            {"rotulo": "Minhas sugestões", "valor": minhas_sugestoes.count(), "url": reverse("saude:lista", args=["sugestoes"])},
+            {"rotulo": "Produtos", "valor": Produto.objects.count(), "url": reverse("saude:lista", args=["produtos"])},
+            {"rotulo": "Substâncias", "valor": Substancia.objects.count(), "url": reverse("saude:lista", args=["substancias"])},
+            {"rotulo": "Referências", "valor": Referencia.objects.count(), "url": reverse("saude:lista", args=["referencias"])},
         ]
-
-        atividades = minhas_sugestoes.select_related(
-            "produto_risco",
-            "produto_seguro",
-        )[:4]
-
+        atividades = minhas_sugestoes.select_related("produto_risco", "produto_seguro")[:4]
     else:
         exposicao = None
         metricas = [
-            {
-                "rotulo": "Usuárias",
-                "valor": Pessoa.objects.filter(
-                    tipo_usuario="USUARIA"
-                ).count(),
-                "url": reverse("saude:lista", args=["usuarias"]),
-            },
-            {
-                "rotulo": "Especialistas",
-                "valor": Pessoa.objects.filter(
-                    tipo_usuario="ESPECIALISTA"
-                ).count(),
-                "url": reverse(
-                    "saude:lista",
-                    args=["especialistas"],
-                ),
-            },
-            {
-                "rotulo": "Produtos",
-                "valor": Produto.objects.count(),
-                "url": reverse("saude:lista", args=["produtos"]),
-            },
-            {
-                "rotulo": "Alertas",
-                "valor": AlertaRisco.objects.count(),
-                "url": reverse("saude:lista", args=["alertas"]),
-            },
+            {"rotulo": "Usuárias", "valor": Pessoa.objects.filter(tipo_usuario="USUARIA").count(), "url": reverse("saude:lista", args=["usuarias"])},
+            {"rotulo": "Especialistas", "valor": Pessoa.objects.filter(tipo_usuario="ESPECIALISTA").count(), "url": reverse("saude:lista", args=["especialistas"])},
+            {"rotulo": "Produtos", "value": Produto.objects.count(), "url": reverse("saude:lista", args=["produtos"])},
+            {"rotulo": "Alertas", "valor": AlertaRisco.objects.count(), "url": reverse("saude:lista", args=["alertas"])},
         ]
         atividades = AlertaRisco.objects.select_related("usuario")[:4]
+
+    # Preenchimento seguro dos valores do gráfico RADAR
+    radar_estrogenica = float(exposicao.carga_estrogenica or 0) if (exposicao and getattr(exposicao, 'carga_estrogenica', None)) else 0.0
+    radar_androgenica = float(exposicao.carga_androgenica or 0) if (exposicao and getattr(exposicao, 'carga_androgenica', None)) else 0.0
+    radar_tireoidiana = float(exposicao.carga_tireoidiana or 0) if (exposicao and getattr(exposicao, 'carga_tireoidiana', None)) else 0.0
 
     contexto.update({
         "exposicao": exposicao,
         "metricas": metricas,
         "atividades": atividades,
-        "radar_valores": [
-            float(exposicao.carga_estrogenica or 0) if exposicao else 0,
-            float(exposicao.carga_androgenica or 0) if exposicao else 0,
-            float(exposicao.carga_tireoidiana or 0) if exposicao else 0,
-        ],
+        "precisa_perfil": precisa_perfil,
+        "radar_valores": [radar_estrogenica, radar_androgenica, radar_tireoidiana],
     })
 
     return render(request, "dashboard.html", contexto)
-
 
 @login_required(login_url="saude:entrar")
 def lista(request, slug):

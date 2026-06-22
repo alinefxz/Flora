@@ -228,16 +228,27 @@ document.addEventListener("DOMContentLoaded", () => {
         }
   
         search?.addEventListener("input", () => {
-          const term = search.value
-            .trim()
-            .toLocaleLowerCase("pt-BR");
-  
-          list
-            .querySelectorAll(".smart-select-option")
-            .forEach(item => {
-              item.hidden = !item.dataset.search
-                .includes(term);
-            });
+          const term = search.value.trim().toLocaleLowerCase("pt-BR");
+          let hasResults = false;
+
+          list.querySelectorAll(".smart-select-option").forEach(item => {
+            const isVisible = item.dataset.search.includes(term);
+            item.hidden = !isVisible;
+            if (isVisible) hasResults = true;
+          });
+
+          const createBtn = panel.querySelector(".smart-select-create");
+          if (createBtn) {
+            if (!hasResults && term !== "") {
+              createBtn.textContent = "Nenhum produto encontrado. Clique para cadastrar";
+              createBtn.style.borderStyle = "solid";
+              createBtn.style.background = "var(--soft-rose)";
+              createBtn.style.color = "var(--ink)";
+            } else {
+              createBtn.textContent = actionLabel(select);
+              createBtn.style = "";
+            }
+          }
         });
       }
   

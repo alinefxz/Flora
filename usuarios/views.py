@@ -111,10 +111,25 @@ def cadastrar_cidade(request):
             status=400
         )
 
-    cidade, created = Cidade.objects.get_or_create(
-        nome_cidade=municipio["nome"],
-        uf=uf,
-    )
+    # --- INÍCIO DO AJUSTE RESILIENTE CONTRA DUPLICIDADE ---
+    nome_municipio = municipio["nome"].strip()
+    
+    # 1. Faz a busca ignorando variações de maiúsculas/minúsculas (Ex: "SÃO PAULO" vs "São Paulo")
+    cidade = Cidade.objects.filter(nome_cidade__iexact=nome_municipio, uf=uf).first()
+
+    if not cidade:
+        try:
+            # 2. Tenta registrar a nova cidade com o nome oficial retornado pelo IBGE
+            cidade = Cidade.objects.create(nome_cidade=nome_municipio, uf=uf)
+            created = True
+        except Exception:
+            # 3. Fallback: Se duas requisições paralelas tentarem criar ao mesmo tempo,
+            # a que chegou um milissegundo depois falhará no unique_together, cairá aqui e reaproveitará o objeto existente.
+            cidade = Cidade.objects.filter(nome_cidade__iexact=nome_municipio, uf=uf).first()
+            created = False
+    else:
+        created = False
+    # --- FIM DO AJUSTE RESILIENTE ---
 
     if not created:
         return JsonResponse(
